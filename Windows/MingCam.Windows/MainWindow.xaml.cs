@@ -26,9 +26,17 @@ public partial class MainWindow : Window
     private readonly GlobalHotkeyService _hotkeys = new();
     private readonly DispatcherTimer _uiTimer;
     private readonly List<SnipastePinWindow> _pinWindows = new();
+    private readonly List<string> _colorHistory = new();
+
+    private bool _isRecorderWorkspace = true;
+    private CaptureMode _selectedCaptureMode = CaptureMode.FullScreen;
+    private ScreenshotCaptureMode _selectedScreenshotMode = ScreenshotCaptureMode.Region;
+    private BitmapSource? _latestCapturedImage;
 
     private RegionOverlayWindow? _regionOverlay;
     private ScreenshotOverlayWindow? _activeShotOverlay;
+
+    public ScreenRecorderEngine RecorderEngine => _recorder;
 
     public MainWindow()
     {
@@ -55,9 +63,12 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        OutputFolderLabel.Text = $"輸出位置：{_recorder.OutputDirectory}";
+        OutputFolderLabel.Text = _recorder.OutputDirectory;
         RefreshTargets();
         RefreshFiles();
+        ApplyWorkspaceVisuals();
+        ApplyCaptureModeVisuals();
+        ApplyScreenshotModeVisuals();
 
         _hotkeys.RegionScreenshotTriggered += () => Dispatcher.Invoke(() => LaunchScreenshotOverlay(colorPickerOnly: false));
         _hotkeys.PinClipboardTriggered += () => Dispatcher.Invoke(PinFromClipboard);
@@ -66,7 +77,7 @@ public partial class MainWindow : Window
         _hotkeys.Attach(this);
 
         HotkeyStatusText.Text = _hotkeys.StatusSummary;
-        SetStatus("MingCam for Windows 已就緒。");
+        SetStatus("MingCam for Windows 已就緒（免安裝 Portable 模式）。");
     }
 
     private void SetStatus(string msg)
@@ -74,53 +85,102 @@ public partial class MainWindow : Window
         StatusFooterText.Text = $"[{DateTime.Now:HH:mm:ss}] {msg}";
     }
 
-    // --- Navigation ---
+    // --- Hover Help Banner (Matches macOS hoverFeatureBanner) ---
 
-    private void SwitchPanel(UIElement target, Button activeBtn)
+    private void HoverHelp_Enter(object sender, MouseEventArgs e)
     {
-        RecorderPanel.Visibility = target == RecorderPanel ? Visibility.Visible : Visibility.Collapsed;
-        ScreenshotPanel.Visibility = target == ScreenshotPanel ? Visibility.Visible : Visibility.Collapsed;
-        FilesPanel.Visibility = target == FilesPanel ? Visibility.Visible : Visibility.Collapsed;
-
-        var navButtons = new[] { NavRecorderBtn, NavScreenshotBtn, NavFilesBtn };
-        foreach (var btn in navButtons)
+        if (sender is FrameworkElement el && el.Tag is string raw && raw.Contains('|'))
         {
-            bool active = btn == activeBtn;
-            btn.Background = active ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.Transparent;
-            btn.Foreground = active ? Brushes.White : new SolidColorBrush(Color.FromRgb(148, 163, 184));
-            btn.FontWeight = active ? FontWeights.SemiBold : FontWeights.Medium;
+            var parts = raw.Split('|', 2);
+            HoverBannerTitle.Text = parts[0];
+            HoverBannerTitle.Foreground = new SolidColorBrush(Color.FromRgb(250, 204, 21));
+            HoverBannerDetail.Text = parts[1];
+            HoverBannerDetail.Foreground = Brushes.White;
+            HoverBannerBorder.Background = new SolidColorBrush(Color.FromRgb(34, 38, 52));
         }
     }
 
-    private void NavRecorder_Click(object sender, RoutedEventArgs e) => SwitchPanel(RecorderPanel, NavRecorderBtn);
-    private void NavScreenshot_Click(object sender, RoutedEventArgs e) => SwitchPanel(ScreenshotPanel, NavScreenshotBtn);
-    private void NavFiles_Click(object sender, RoutedEventArgs e)
+    private void HoverHelp_Leave(object sender, MouseEventArgs e)
     {
-        RefreshFiles();
-        SwitchPanel(FilesPanel, NavFilesBtn);
+        HoverBannerTitle.Text = "💡";
+        HoverBannerTitle.Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+        HoverBannerDetail.Text = "滑鼠停留在任何按鈕上可即時查看功能說明 ｜ 框選截圖 (F1) · 剪貼簿貼圖 (F3) · 放大鏡取色 (Ctrl+Shift+C) · 錄影 (Ctrl+Shift+R)";
+        HoverBannerDetail.Foreground = new SolidColorBrush(Color.FromRgb(184, 193, 206));
+        HoverBannerBorder.Background = new SolidColorBrush(Color.FromRgb(28, 33, 43));
     }
 
-    // --- Recorder ---
+    // --- Top Workspace Tabs (Recorder vs Screenshot) ---
 
-    private CaptureMode GetSelectedCaptureMode()
+    public void SwitchToWorkspace(bool recorderTab)
     {
-        if (ModeRegionRadio.IsChecked == true) return CaptureMode.Region;
-        if (ModeWindowRadio.IsChecked == true) return CaptureMode.Window;
-        if (ModeAudioOnlyRadio.IsChecked == true) return CaptureMode.AudioOnly;
-        return CaptureMode.FullScreen;
+        _isRecorderWorkspace = recorderTab;
+        ApplyWorkspaceVisuals();
     }
 
-    private void CaptureMode_Changed(object sender, RoutedEventArgs e)
+    private void TabRecorder_Click(object sender, RoutedEventArgs e) => SwitchToWorkspace(true);
+    private void TabScreenshot_Click(object sender, RoutedEventArgs e) => SwitchToWorkspace(false);
+
+    private void ApplyWorkspaceVisuals()
     {
-        if (!IsLoaded) return;
-        var mode = GetSelectedCaptureMode();
+        RecorderModeStrip.Visibility = _isRecorderWorkspace ? Visibility.Visible : Visibility.Collapsed;
+        ScreenshotModeStrip.Visibility = _isRecorderWorkspace ? Visibility.Collapsed : Visibility.Visible;
 
-        MonitorPickerRow.Visibility = mode == CaptureMode.FullScreen ? Visibility.Visible : Visibility.Collapsed;
-        RegionHintRow.Visibility = mode == CaptureMode.Region ? Visibility.Visible : Visibility.Collapsed;
-        WindowPickerRow.Visibility = mode == CaptureMode.Window ? Visibility.Visible : Visibility.Collapsed;
-        AudioOnlyHintRow.Visibility = mode == CaptureMode.AudioOnly ? Visibility.Visible : Visibility.Collapsed;
+        RecorderLeftCards.Visibility = _isRecorderWorkspace ? Visibility.Visible : Visibility.Collapsed;
+        ScreenshotLeftCards.Visibility = _isRecorderWorkspace ? Visibility.Collapsed : Visibility.Visible;
+        LatestPreviewCard.Visibility = (!_isRecorderWorkspace && _latestCapturedImage != null)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
-        if (mode == CaptureMode.Region)
+        // Top switcher pill colors (Red for Recorder, Cyan for Screenshot — matching macOS!)
+        TabRecorderBtn.Background = _isRecorderWorkspace ? new SolidColorBrush(Color.FromRgb(220, 38, 38)) : Brushes.Transparent;
+        TabRecorderBtn.Foreground = _isRecorderWorkspace ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 188, 200));
+
+        TabScreenshotBtn.Background = !_isRecorderWorkspace ? new SolidColorBrush(Color.FromRgb(6, 182, 212)) : Brushes.Transparent;
+        TabScreenshotBtn.Foreground = !_isRecorderWorkspace ? Brushes.Black : new SolidColorBrush(Color.FromRgb(180, 188, 200));
+
+        // Brand badge gradient
+        BrandBadgeCircle.Background = _isRecorderWorkspace
+            ? new LinearGradientBrush(Color.FromRgb(239, 68, 68), Color.FromRgb(249, 115, 22), 45)
+            : new LinearGradientBrush(Color.FromRgb(6, 182, 212), Color.FromRgb(37, 99, 235), 45);
+        BrandIconText.Text = _isRecorderWorkspace ? "●" : "⌖";
+    }
+
+    // --- Sub-Mode Strips ---
+
+    private void RecorderModeBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tag && Enum.TryParse<CaptureMode>(tag, out var mode))
+        {
+            _selectedCaptureMode = mode;
+            ApplyCaptureModeVisuals();
+        }
+    }
+
+    private void ApplyCaptureModeVisuals()
+    {
+        var map = new (Button Btn, CaptureMode Mode)[]
+        {
+            (ModeFullBtn, CaptureMode.FullScreen),
+            (ModeRegionBtn, CaptureMode.Region),
+            (ModeWindowBtn, CaptureMode.Window),
+            (ModeAudioBtn, CaptureMode.AudioOnly)
+        };
+
+        foreach (var (btn, mode) in map)
+        {
+            bool active = mode == _selectedCaptureMode;
+            btn.Background = active ? new SolidColorBrush(Color.FromRgb(42, 47, 62)) : new SolidColorBrush(Color.FromRgb(30, 32, 40));
+            btn.BorderBrush = active ? new SolidColorBrush(Color.FromRgb(239, 68, 68)) : new SolidColorBrush(Color.FromRgb(45, 49, 61));
+            btn.Foreground = active ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 188, 200));
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.Medium;
+        }
+
+        MonitorPickerRow.Visibility = _selectedCaptureMode == CaptureMode.FullScreen ? Visibility.Visible : Visibility.Collapsed;
+        RegionHintRow.Visibility = _selectedCaptureMode == CaptureMode.Region ? Visibility.Visible : Visibility.Collapsed;
+        WindowPickerRow.Visibility = _selectedCaptureMode == CaptureMode.Window ? Visibility.Visible : Visibility.Collapsed;
+        AudioOnlyHintRow.Visibility = _selectedCaptureMode == CaptureMode.AudioOnly ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_selectedCaptureMode == CaptureMode.Region)
         {
             EnsureRegionOverlayVisible();
         }
@@ -129,6 +189,46 @@ public partial class MainWindow : Window
             HideRegionOverlay();
         }
     }
+
+    private void ScreenshotModeBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tag && Enum.TryParse<ScreenshotCaptureMode>(tag, out var mode))
+        {
+            _selectedScreenshotMode = mode;
+            ApplyScreenshotModeVisuals();
+        }
+    }
+
+    private void ApplyScreenshotModeVisuals()
+    {
+        var map = new (Button Btn, ScreenshotCaptureMode Mode)[]
+        {
+            (ShotRegionBtn, ScreenshotCaptureMode.Region),
+            (ShotWindowBtn, ScreenshotCaptureMode.Window),
+            (ShotFullBtn, ScreenshotCaptureMode.FullScreen),
+            (ShotColorBtn, ScreenshotCaptureMode.ColorPicker)
+        };
+
+        foreach (var (btn, mode) in map)
+        {
+            bool active = mode == _selectedScreenshotMode;
+            btn.Background = active ? new SolidColorBrush(Color.FromRgb(24, 48, 60)) : new SolidColorBrush(Color.FromRgb(30, 32, 40));
+            btn.BorderBrush = active ? new SolidColorBrush(Color.FromRgb(34, 211, 238)) : new SolidColorBrush(Color.FromRgb(45, 49, 61));
+            btn.Foreground = active ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 188, 200));
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.Medium;
+        }
+
+        ShotModeDescText.Text = _selectedScreenshotMode switch
+        {
+            ScreenshotCaptureMode.Region => "框選螢幕範圍後即時浮出 9 種 PicPick 標註工具列，可一鍵釘選貼圖、複製或儲存 PNG (F1)。",
+            ScreenshotCaptureMode.Window => "擷取「錄影與錄音」中選擇的目標視窗為高畫質 PNG 並複製到剪貼簿。",
+            ScreenshotCaptureMode.FullScreen => "立即將整個螢幕擷取為高畫質 PNG，同時儲存並複製到剪貼簿。",
+            ScreenshotCaptureMode.ColorPicker => "啟動像素級游標放大鏡，即時顯示座標與 HEX/RGB 色碼，點擊或按 C 鍵複製。",
+            _ => string.Empty
+        };
+    }
+
+    // --- Recorder Controls ---
 
     private void EnsureRegionOverlayVisible()
     {
@@ -164,17 +264,22 @@ public partial class MainWindow : Window
         if (windows.Count > 0) WindowCombo.SelectedIndex = 0;
     }
 
-    private void StartRecord_Click(object sender, RoutedEventArgs e) => StartRecording();
+    private async void RecToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (_recorder.Status == RecordingStatus.Idle)
+            StartRecording();
+        else if (_recorder.Status is RecordingStatus.Recording or RecordingStatus.Paused)
+            await StopRecordingAsync();
+    }
 
     private void StartRecording()
     {
-        var mode = GetSelectedCaptureMode();
         int fps = Fps60Radio.IsChecked == true ? 60 : 30;
         bool sysAudio = SystemAudioCheck.IsChecked == true;
         bool micAudio = MicAudioCheck.IsChecked == true;
 
         NativeMethods.RECT regionRect = default;
-        if (mode == CaptureMode.Region)
+        if (_selectedCaptureMode == CaptureMode.Region)
         {
             EnsureRegionOverlayVisible();
             regionRect = _regionOverlay!.GetCapturePixelRect();
@@ -182,7 +287,7 @@ public partial class MainWindow : Window
         }
 
         bool started = _recorder.StartRecording(
-            mode,
+            _selectedCaptureMode,
             fps,
             sysAudio,
             micAudio,
@@ -193,7 +298,7 @@ public partial class MainWindow : Window
         if (started)
         {
             _uiTimer.Start();
-            SetStatus($"正在錄製 ({mode}, {fps} FPS)...");
+            SetStatus($"正在錄製 ({_selectedCaptureMode}, {fps} FPS)...");
         }
         else
         {
@@ -206,15 +311,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void PauseRecord_Click(object sender, RoutedEventArgs e)
-    {
-        _recorder.TogglePause();
-    }
-
-    private async void StopRecord_Click(object sender, RoutedEventArgs e)
-    {
-        await StopRecordingAsync();
-    }
+    private void PauseRecord_Click(object sender, RoutedEventArgs e) => _recorder.TogglePause();
 
     private async Task StopRecordingAsync()
     {
@@ -226,49 +323,55 @@ public partial class MainWindow : Window
     private async void ToggleRecordingByHotkey()
     {
         if (_recorder.Status == RecordingStatus.Idle)
-        {
             StartRecording();
-        }
         else if (_recorder.Status is RecordingStatus.Recording or RecordingStatus.Paused)
-        {
             await StopRecordingAsync();
-        }
     }
 
     private void SyncRecorderUi()
     {
         var st = _recorder.Status;
-        bool idle = st == RecordingStatus.Idle;
+        bool active = st is RecordingStatus.Recording or RecordingStatus.Paused;
 
-        StartRecordBtn.IsEnabled = idle;
-        PauseRecordBtn.IsEnabled = st is RecordingStatus.Recording or RecordingStatus.Paused;
-        StopRecordBtn.IsEnabled = st is RecordingStatus.Recording or RecordingStatus.Paused;
+        PauseRecordBtn.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+        PauseRecordBtn.Content = st == RecordingStatus.Paused ? "▶" : "⏸";
 
-        PauseRecordBtn.Content = st == RecordingStatus.Paused ? "▶ 繼續" : "⏸ 暫停";
+        RecToggleBtn.Content = st == RecordingStatus.Idle ? "● REC" : "■ STOP";
+        RecToggleBtn.Background = st == RecordingStatus.Idle
+            ? new LinearGradientBrush(Color.FromRgb(230, 38, 51), Color.FromRgb(191, 20, 31), 90)
+            : new SolidColorBrush(Color.FromRgb(100, 116, 139));
 
-        switch (st)
+        RecTimerLabel.Foreground = st switch
         {
-            case RecordingStatus.Idle:
-                RecStatusLabel.Text = "待機就緒";
-                RecIndicatorDot.Fill = new SolidColorBrush(Color.FromRgb(100, 116, 139));
-                RecTimerLabel.Text = "00:00:00";
-                break;
-            case RecordingStatus.Recording:
-                RecStatusLabel.Text = "正在錄製中...";
-                RecIndicatorDot.Fill = new SolidColorBrush(Color.FromRgb(239, 68, 68));
-                break;
-            case RecordingStatus.Paused:
-                RecStatusLabel.Text = "已暫停錄製";
-                RecIndicatorDot.Fill = new SolidColorBrush(Color.FromRgb(234, 179, 8));
-                break;
-            case RecordingStatus.Stopping:
-                RecStatusLabel.Text = "正在寫入檔案...";
-                RecIndicatorDot.Fill = new SolidColorBrush(Color.FromRgb(56, 189, 248));
-                break;
+            RecordingStatus.Recording => new SolidColorBrush(Color.FromRgb(248, 113, 113)),
+            RecordingStatus.Paused => new SolidColorBrush(Color.FromRgb(250, 204, 21)),
+            _ => Brushes.White
+        };
+
+        if (st == RecordingStatus.Idle)
+        {
+            RecTimerLabel.Text = "00:00:00";
         }
     }
 
-    // --- Screenshot & Snipaste Pin ---
+    // --- Screenshot, Snipaste Pin & Color History ---
+
+    private void TriggerSelectedShot_Click(object sender, RoutedEventArgs e)
+    {
+        switch (_selectedScreenshotMode)
+        {
+            case ScreenshotCaptureMode.Region:
+                LaunchScreenshotOverlay(colorPickerOnly: false);
+                break;
+            case ScreenshotCaptureMode.ColorPicker:
+                LaunchScreenshotOverlay(colorPickerOnly: true);
+                break;
+            case ScreenshotCaptureMode.FullScreen:
+            case ScreenshotCaptureMode.Window:
+                CaptureFullScreenNow();
+                break;
+        }
+    }
 
     private void RegionScreenshot_Click(object sender, RoutedEventArgs e) => LaunchScreenshotOverlay(colorPickerOnly: false);
     private void ColorPicker_Click(object sender, RoutedEventArgs e) => LaunchScreenshotOverlay(colorPickerOnly: true);
@@ -284,20 +387,109 @@ public partial class MainWindow : Window
         var overlay = new ScreenshotOverlayWindow(
             colorPickerOnly,
             _recorder.OutputDirectory,
-            onPin: bmp => Dispatcher.Invoke(() => OpenPinWindow(bmp)),
+            onPin: bmp => Dispatcher.Invoke(() =>
+            {
+                SetLatestPreview(bmp);
+                OpenPinWindow(bmp);
+            }),
             onSaved: path => Dispatcher.Invoke(() =>
             {
+                try
+                {
+                    var img = new BitmapImage();
+                    img.BeginInit();
+                    img.CacheOption = BitmapCacheOption.OnLoad;
+                    img.UriSource = new Uri(path);
+                    img.EndInit();
+                    img.Freeze();
+                    SetLatestPreview(img);
+                }
+                catch { }
+
                 SetStatus($"✅ 截圖已儲存並複製：{Path.GetFileName(path)}");
                 RefreshFiles();
             }),
-            onToast: msg => Dispatcher.Invoke(() => SetStatus(msg)));
+            onToast: msg => Dispatcher.Invoke(() =>
+            {
+                if (msg.Contains('#'))
+                {
+                    int hashIdx = msg.IndexOf('#');
+                    if (hashIdx + 7 <= msg.Length)
+                    {
+                        AddColorHistory(msg.Substring(hashIdx, 7));
+                    }
+                }
+                SetStatus(msg);
+            }));
 
         overlay.Closed += (_, _) => _activeShotOverlay = null;
         _activeShotOverlay = overlay;
         overlay.Show();
     }
 
-    private void FullScreenShot_Click(object sender, RoutedEventArgs e)
+    public void SetLatestPreview(BitmapSource bmp)
+    {
+        _latestCapturedImage = bmp;
+        LatestPreviewImage.Source = bmp;
+        if (!_isRecorderWorkspace)
+        {
+            LatestPreviewCard.Visibility = Visibility.Visible;
+        }
+    }
+
+    public void AddColorHistory(string hex)
+    {
+        hex = hex.ToUpperInvariant();
+        _colorHistory.Remove(hex);
+        _colorHistory.Insert(0, hex);
+        if (_colorHistory.Count > 10) _colorHistory.RemoveAt(_colorHistory.Count - 1);
+
+        ColorHistoryEmptyText.Visibility = _colorHistory.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ColorHistoryPanel.Children.Clear();
+
+        foreach (var h in _colorHistory)
+        {
+            var btn = new Button
+            {
+                Margin = new Thickness(0, 0, 6, 6),
+                Padding = new Thickness(7, 4, 7, 4),
+                Background = new SolidColorBrush(Color.FromRgb(17, 19, 24)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 65, 85)),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                Tag = h
+            };
+            var sp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            sp.Children.Add(new Border
+            {
+                Width = 12,
+                Height = 12,
+                CornerRadius = new CornerRadius(3),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(h)),
+                Margin = new Thickness(0, 0, 5, 0)
+            });
+            sp.Children.Add(new TextBlock
+            {
+                Text = h,
+                Foreground = Brushes.White,
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11
+            });
+            btn.Content = sp;
+            btn.Click += (_, _) =>
+            {
+                try
+                {
+                    Clipboard.SetText(h);
+                    SetStatus($"📋 已複製色碼 {h}");
+                }
+                catch { }
+            };
+            ColorHistoryPanel.Children.Add(btn);
+        }
+    }
+
+    private void CaptureFullScreenNow()
     {
         try
         {
@@ -323,7 +515,8 @@ public partial class MainWindow : Window
                     enc.Frames.Add(BitmapFrame.Create(bmp));
                     enc.Save(fs);
                 }
-                Clipboard.SetImage(bmp);
+                try { Clipboard.SetImage(bmp); } catch { }
+                SetLatestPreview(bmp);
                 SetStatus($"✅ 全螢幕截圖已儲存並複製：{Path.GetFileName(path)}");
                 RefreshFiles();
             }
@@ -338,6 +531,24 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             SetStatus($"❌ 全螢幕截圖失敗：{ex.Message}");
+        }
+    }
+
+    private void PinLatestPreview_Click(object sender, RoutedEventArgs e)
+    {
+        if (_latestCapturedImage != null) OpenPinWindow(_latestCapturedImage);
+    }
+
+    private void CopyLatestPreview_Click(object sender, RoutedEventArgs e)
+    {
+        if (_latestCapturedImage != null)
+        {
+            try
+            {
+                Clipboard.SetImage(_latestCapturedImage);
+                SetStatus("📋 已複製最新截圖至剪貼簿。");
+            }
+            catch { }
         }
     }
 
@@ -397,15 +608,12 @@ public partial class MainWindow : Window
 
     private void UpdatePinCountLabel()
     {
-        CloseAllPinsBtn.Content = $"關閉全部貼圖 ({_pinWindows.Count})";
+        PinCountBadge.Text = $"目前 {_pinWindows.Count} 張";
     }
 
     private void CloseAllPins_Click(object sender, RoutedEventArgs e)
     {
-        foreach (var pin in _pinWindows.ToList())
-        {
-            pin.Close();
-        }
+        foreach (var pin in _pinWindows.ToList()) pin.Close();
         _pinWindows.Clear();
         UpdatePinCountLabel();
     }
@@ -426,9 +634,14 @@ public partial class MainWindow : Window
 
     private void RefreshFiles_Click(object sender, RoutedEventArgs e) => RefreshFiles();
 
-    private void RefreshFiles()
+    public void RefreshFiles()
     {
         FilesListBox.ItemsSource = _recorder.LoadFiles(GetFileFilter());
+    }
+
+    public void PopulateDemoItemsForCapture(List<RecordedFileItem> items)
+    {
+        FilesListBox.ItemsSource = items;
     }
 
     private void OpenOutputFolder_Click(object sender, RoutedEventArgs e)
@@ -476,9 +689,6 @@ public partial class MainWindow : Window
         _hotkeys.Dispose();
         _recorder.Dispose();
         HideRegionOverlay();
-        foreach (var pin in _pinWindows.ToList())
-        {
-            pin.Close();
-        }
+        foreach (var pin in _pinWindows.ToList()) pin.Close();
     }
 }

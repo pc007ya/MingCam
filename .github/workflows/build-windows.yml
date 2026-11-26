@@ -36,6 +36,27 @@ jobs:
             -p:DebugSymbols=false `
             -o publish/MingCam-Windows-x64
 
+      - name: Run Windows VM Verification & Capture Real UI Screenshots
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path "publish/MingCam-Windows-x64/MingCam.exe").Path
+          $outDir = Join-Path (Get-Location) "ui_shots"
+          $proc = Start-Process -FilePath $exe -ArgumentList "--verify-and-capture", "`"$outDir`"" -Wait -PassThru
+          if (Test-Path "ui_shots/vm_verify_report.txt") {
+            Get-Content "ui_shots/vm_verify_report.txt"
+          }
+          if ($proc.ExitCode -ne 0) {
+            throw "MingCam VM verification exited with code $($proc.ExitCode)"
+          }
+
+      - name: Upload Real UI Screenshots Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MingCam-UI-Screenshots
+          path: ui_shots/
+          retention-days: 14
+
       - name: Compress Portable ZIP
         shell: pwsh
         run: |
