@@ -122,13 +122,14 @@ public sealed class ScreenRecorderEngine : IDisposable
 
         try
         {
-            _writer = new MediaFoundationWriter(
+            // Construct IMFSinkWriter on an MTA thread so background video/audio threads never hit COM STA->MTA E_NOINTERFACE
+            _writer = Task.Run(() => new MediaFoundationWriter(
                 _currentOutputPath,
                 enableVideo: !isAudioOnly,
                 width: captureWidth,
                 height: captureHeight,
                 fps: fps,
-                enableAudio: enableAudio);
+                enableAudio: enableAudio)).GetAwaiter().GetResult();
 
             _isPaused = false;
             _clock.Restart();
