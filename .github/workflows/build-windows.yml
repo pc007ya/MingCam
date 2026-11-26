@@ -49,21 +49,14 @@ jobs:
           retention-days: 30
 
       - name: Publish ZIP to GitHub Release v1.0.0
-        shell: pwsh
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $releaseExists = $true
-          try {
-            gh release view v1.0.0 | Out-Null
-          } catch {
-            $releaseExists = $false
-          }
-
-          if ($releaseExists) {
+          if gh release view v1.0.0 >/dev/null 2>&1; then
             gh release upload v1.0.0 MingCam-Windows-x64-Portable.zip --clobber
-          } else {
-            gh release create v1.0.0 MingCam-Windows-x64-Portable.zip `
-              --title "MingCam v1.0.0 — macOS 原生版 & Windows 綠色免安裝版" `
+          else
+            gh release create v1.0.0 MingCam-Windows-x64-Portable.zip \
+              --title "MingCam v1.0.0 — macOS 原生版 & Windows 綠色免安裝版" \
               --notes "MingCam Windows v1.0 綠色免安裝版（免安裝、免系統管理員、已內包 .NET 8，解壓後直接點兩下 MingCam.exe 即可使用）。"
-          }
+          fi
