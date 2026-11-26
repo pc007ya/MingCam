@@ -1,112 +1,301 @@
 <Window x:Class="MingCam.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MingCam for Windows — 環境檢測版 (v0.1.0)"
-        Width="760" Height="620"
-        MinWidth="680" MinHeight="560"
-        Background="#0F172A"
+        Title="MingCam for Windows — 螢幕錄影・內錄・截圖貼圖與標註"
+        Width="980" Height="680"
+        MinWidth="860" MinHeight="600"
+        Background="#0B1120"
         Foreground="#F8FAFC"
-        WindowStartupLocation="CenterScreen">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Background="#1E293B" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="MingCam for Windows — 綠色免安裝環境檢測"
-                               FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" />
-                    <TextBlock x:Name="SystemInfoText"
-                               Text="正在讀取系統資訊..."
-                               FontSize="12" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap" />
+        <!-- Left Navigation Sidebar -->
+        <Border Grid.Column="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,1,0" Padding="16,20">
+            <DockPanel LastChildFill="True">
+                <!-- App Brand -->
+                <StackPanel DockPanel.Dock="Top" Margin="4,0,0,22">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="32" Height="32" CornerRadius="8" Background="#0F766E" Margin="0,0,10,0">
+                            <TextBlock Text="M" Foreground="White" FontWeight="Bold" FontSize="16"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="MingCam" FontSize="17" FontWeight="Bold" Foreground="#F8FAFC" />
+                            <TextBlock Text="Windows Portable v1.0" FontSize="11" Foreground="#94A3B8" />
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
-                <Border Grid.Column="1" Background="#064E3B" CornerRadius="8" Padding="10,6" VerticalAlignment="Center">
-                    <TextBlock Text="免安裝 Portable" Foreground="#34D399" FontSize="12" FontWeight="SemiBold" />
+
+                <!-- Bottom Hotkey Quick Reference -->
+                <Border DockPanel.Dock="Bottom" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1"
+                        CornerRadius="10" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="全域快捷鍵" FontSize="11.5" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,6" />
+                        <TextBlock Text="F1　區域截圖與標註" FontSize="11" Foreground="#CBD5E1" Margin="0,2" />
+                        <TextBlock Text="F3　剪貼簿懸浮貼圖" FontSize="11" Foreground="#CBD5E1" Margin="0,2" />
+                        <TextBlock Text="Ctrl+Shift+C　放大鏡取色" FontSize="11" Foreground="#CBD5E1" Margin="0,2" />
+                        <TextBlock Text="Ctrl+Shift+R　開始/停止錄影" FontSize="11" Foreground="#CBD5E1" Margin="0,2" />
+                    </StackPanel>
                 </Border>
-            </Grid>
+
+                <!-- Workspace Nav Buttons -->
+                <StackPanel Margin="0,0,0,16">
+                    <Button x:Name="NavRecorderBtn" Content="🎬  錄影與音訊內錄"
+                            Click="NavRecorder_Click" HorizontalContentAlignment="Left"
+                            Padding="14,11" Margin="0,0,0,6"
+                            Background="#1E293B" Foreground="#F8FAFC" FontWeight="SemiBold"
+                            BorderThickness="0" Cursor="Hand" />
+                    <Button x:Name="NavScreenshotBtn" Content="📌  截圖與貼圖標註"
+                            Click="NavScreenshot_Click" HorizontalContentAlignment="Left"
+                            Padding="14,11" Margin="0,0,0,6"
+                            Background="Transparent" Foreground="#94A3B8" FontWeight="Medium"
+                            BorderThickness="0" Cursor="Hand" />
+                    <Button x:Name="NavFilesBtn" Content="📁  輸出檔案庫"
+                            Click="NavFiles_Click" HorizontalContentAlignment="Left"
+                            Padding="14,11" Margin="0,0,0,6"
+                            Background="Transparent" Foreground="#94A3B8" FontWeight="Medium"
+                            BorderThickness="0" Cursor="Hand" />
+                </StackPanel>
+            </DockPanel>
         </Border>
 
-        <!-- Action Buttons -->
-        <WrapPanel Grid.Row="1" Margin="0,0,0,14">
-            <Button Content="▶ 一鍵執行全部檢測" Style="{StaticResource PrimaryButtonStyle}"
-                    Margin="0,0,10,8" Click="RunAllTests_Click" />
-            <Button Content="測試全域熱鍵" Style="{StaticResource SecondaryButtonStyle}"
-                    Margin="0,0,8,8" Click="TestHotkey_Click" />
-            <Button Content="測試螢幕截圖" Style="{StaticResource SecondaryButtonStyle}"
-                    Margin="0,0,8,8" Click="TestCapture_Click" />
-            <Button Content="測試置頂穿透框" Style="{StaticResource SecondaryButtonStyle}"
-                    Margin="0,0,8,8" Click="TestOverlay_Click" />
-            <Button Content="測試檔案寫入" Style="{StaticResource SecondaryButtonStyle}"
-                    Margin="0,0,8,8" Click="TestFileWrite_Click" />
-        </WrapPanel>
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1" Margin="24,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <!-- Results + Preview -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.25*" />
-                <ColumnDefinition Width="14" />
-                <ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
+            <!-- PANEL 1: SCREEN RECORDER -->
+            <ScrollViewer x:Name="RecorderPanel" Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="螢幕錄影與系統音訊內錄" FontSize="21" FontWeight="Bold" Foreground="#F8FAFC" />
+                    <TextBlock Text="原生 Windows Media Foundation H.264 / AAC 編碼與 WASAPI Loopback 內錄，無時長限制、無浮水印。"
+                               FontSize="12.5" Foreground="#94A3B8" Margin="0,4,0,18" />
 
-            <!-- Diagnostic Log -->
-            <Border Grid.Column="0" Background="#1E293B" CornerRadius="12" Padding="14">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="檢測結果紀錄" FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,8" />
-                    <TextBox x:Name="LogTextBox"
-                             Grid.Row="1"
-                             Background="#0B1120"
-                             Foreground="#E2E8F0"
-                             BorderThickness="0"
-                             FontFamily="Consolas"
-                             FontSize="12"
-                             IsReadOnly="True"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             Padding="10" />
-                </Grid>
-            </Border>
+                    <!-- Mode Selection -->
+                    <TextBlock Text="擷取模式" FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,8" />
+                    <UniformGrid Columns="4" Margin="0,0,0,16">
+                        <RadioButton x:Name="ModeFullScreenRadio" Content="🖥️ 全螢幕" GroupName="RecMode" IsChecked="True"
+                                     Checked="CaptureMode_Changed" Foreground="#F8FAFC" Margin="0,0,8,0" Padding="6,4" FontSize="13" />
+                        <RadioButton x:Name="ModeRegionRadio" Content="🟩 矩形區域" GroupName="RecMode"
+                                     Checked="CaptureMode_Changed" Foreground="#F8FAFC" Margin="0,0,8,0" Padding="6,4" FontSize="13" />
+                        <RadioButton x:Name="ModeWindowRadio" Content="🪟 指定視窗" GroupName="RecMode"
+                                     Checked="CaptureMode_Changed" Foreground="#F8FAFC" Margin="0,0,8,0" Padding="6,4" FontSize="13" />
+                        <RadioButton x:Name="ModeAudioOnlyRadio" Content="🎵 純音訊 (M4A)" GroupName="RecMode"
+                                     Checked="CaptureMode_Changed" Foreground="#F8FAFC" Padding="6,4" FontSize="13" />
+                    </UniformGrid>
 
-            <!-- Capture Preview -->
-            <Border Grid.Column="2" Background="#1E293B" CornerRadius="12" Padding="14">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="螢幕擷取預覽（左上角 480×300）" FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,8" />
-                    <Border Grid.Row="1" Background="#0B1120" CornerRadius="8" ClipToBounds="True">
+                    <!-- Target Selector Card -->
+                    <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <!-- Monitor Picker -->
+                            <StackPanel x:Name="MonitorPickerRow" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="選擇顯示器：" Foreground="#CBD5E1" VerticalAlignment="Center" Width="92" />
+                                <ComboBox x:Name="MonitorCombo" Width="320" Padding="8,5" />
+                                <Button Content="重新整理" Click="RefreshTargets_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Padding="10,5" />
+                            </StackPanel>
+
+                            <!-- Region Hint -->
+                            <StackPanel x:Name="RegionHintRow" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="🟩 綠色中空錄影框已顯示於桌面，可拖曳上方把手移動或右下角縮放；錄影時會自動轉為紅框且點擊穿透、不錄入影片。"
+                                           Foreground="#86EFAC" FontSize="12.5" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <!-- Window Picker -->
+                            <StackPanel x:Name="WindowPickerRow" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="選擇視窗：" Foreground="#CBD5E1" VerticalAlignment="Center" Width="92" />
+                                <ComboBox x:Name="WindowCombo" Width="400" Padding="8,5" />
+                                <Button Content="重新整理" Click="RefreshTargets_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Padding="10,5" />
+                            </StackPanel>
+
+                            <!-- Audio Only Hint -->
+                            <StackPanel x:Name="AudioOnlyHintRow" Visibility="Collapsed">
+                                <TextBlock Text="🎵 純音訊模式將直接擷取 Windows 系統播放的數位音訊（WASAPI Loopback）與／或麥克風，輸出高音質 AAC 48kHz .m4a。"
+                                           Foreground="#93C5FD" FontSize="12.5" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Video & Audio Settings -->
+                    <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,18">
                         <Grid>
-                            <TextBlock x:Name="PreviewPlaceholder"
-                                       Text="尚未執行螢幕截圖測試"
-                                       Foreground="#64748B"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                            <Image x:Name="CapturePreviewImage" Stretch="Uniform" />
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="影片畫質設定" FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,10" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="影格率 (FPS)：" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <RadioButton x:Name="Fps30Radio" Content="30 FPS" GroupName="Fps" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,14,0" />
+                                    <RadioButton x:Name="Fps60Radio" Content="60 FPS" GroupName="Fps" Foreground="#F8FAFC" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="音訊來源設定" FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1" Margin="0,0,0,10" />
+                                <CheckBox x:Name="SystemAudioCheck" Content="內錄系統聲音 (WASAPI Loopback，免虛擬音效卡)"
+                                          IsChecked="True" Foreground="#F8FAFC" Margin="0,0,0,6" />
+                                <CheckBox x:Name="MicAudioCheck" Content="同時錄製麥克風聲音"
+                                          IsChecked="False" Foreground="#F8FAFC" />
+                            </StackPanel>
                         </Grid>
                     </Border>
-                </Grid>
+
+                    <!-- Recording Control Bar -->
+                    <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="14" Padding="20">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse x:Name="RecIndicatorDot" Width="11" Height="11" Fill="#64748B" Margin="0,0,10,0" />
+                                    <TextBlock x:Name="RecStatusLabel" Text="待機就緒" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                                </StackPanel>
+                                <TextBlock x:Name="RecTimerLabel" Text="00:00:00"
+                                           FontFamily="Consolas" FontSize="28" FontWeight="Bold" Foreground="#38BDF8" Margin="0,4,0,0" />
+                            </StackPanel>
+
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <Button x:Name="StartRecordBtn" Content="● 開始錄影"
+                                        Click="StartRecord_Click"
+                                        Background="#DC2626" Foreground="White" FontWeight="Bold" FontSize="14"
+                                        Padding="22,12" BorderThickness="0" Cursor="Hand" Margin="0,0,10,0" />
+                                <Button x:Name="PauseRecordBtn" Content="⏸ 暫停"
+                                        Click="PauseRecord_Click"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        IsEnabled="False" Padding="16,12" Margin="0,0,10,0" />
+                                <Button x:Name="StopRecordBtn" Content="■ 停止並儲存"
+                                        Click="StopRecord_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        IsEnabled="False" Padding="18,12" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- PANEL 2: SCREENSHOT & SNIPASTE PIN -->
+            <ScrollViewer x:Name="ScreenshotPanel" Grid.Row="0" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="截圖、懸浮貼圖與 PicPick 即時標註" FontSize="21" FontWeight="Bold" Foreground="#F8FAFC" />
+                    <TextBlock Text="框選凍結畫面進行 9 種標註，或將圖片／剪貼簿文字釘選於螢幕最上層（滾輪縮放、Alt+滾輪調透明度）。"
+                               FontSize="12.5" Foreground="#94A3B8" Margin="0,4,0,18" />
+
+                    <UniformGrid Columns="2" Margin="0,0,0,16">
+                        <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,10,10">
+                            <StackPanel>
+                                <TextBlock Text="✂️ 區域截圖 + 9 種標註 (F1)" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                                <TextBlock Text="凍結畫面並顯示放大鏡色碼；框選後可直接使用矩形、箭頭、螢光筆、馬賽克、序號章與文字標註。"
+                                           FontSize="12" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,6,0,14" />
+                                <Button Content="開始區域截圖 (F1)" Click="RegionScreenshot_Click" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="📌 剪貼簿懸浮貼圖 (F3)" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                                <TextBlock Text="將剪貼簿中的圖片或文字直接釘選到最上層；支援滑鼠滾輪縮放 (25%~400%)、Alt+滾輪調透明度、雙擊關閉。"
+                                           FontSize="12" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,6,0,14" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="釘選剪貼簿 (F3)" Click="PinClipboard_Click" Background="#0F766E" Foreground="White"
+                                            FontWeight="SemiBold" Padding="14,8" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" />
+                                    <Button x:Name="CloseAllPinsBtn" Content="關閉全部貼圖 (0)" Click="CloseAllPins_Click" Style="{StaticResource SecondaryButtonStyle}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="🎨 螢幕像素取色放大鏡 (Ctrl+Shift+C)" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                                <TextBlock Text="即時放大游標周圍像素並顯示座標與 HEX / RGB 色碼，點擊或按 C 鍵立即複製到剪貼簿。"
+                                           FontSize="12" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,6,0,14" />
+                                <Button Content="啟動取色放大鏡" Click="ColorPicker_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="12" Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="🖥️ 全螢幕快速截圖" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" />
+                                <TextBlock Text="立即將目前螢幕畫面擷取為高畫質 PNG 並同時複製到剪貼簿與存檔。"
+                                           FontSize="12" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,6,0,14" />
+                                <Button Content="立即全螢幕截圖" Click="FullScreenShot_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- PANEL 3: FILES LIBRARY -->
+            <Grid x:Name="FilesPanel" Grid.Row="0" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                    <StackPanel DockPanel.Dock="Left">
+                        <TextBlock Text="輸出檔案庫" FontSize="21" FontWeight="Bold" Foreground="#F8FAFC" />
+                        <TextBlock x:Name="OutputFolderLabel" Text="輸出位置：Videos\MingCam" FontSize="12" Foreground="#94A3B8" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Content="📂 開啟輸出資料夾" Click="OpenOutputFolder_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" />
+                        <Button Content="🔄 重新整理" Click="RefreshFiles_Click" Style="{StaticResource SecondaryButtonStyle}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                    <RadioButton x:Name="FilterAllRadio" Content="全部檔案" GroupName="FileFilter" IsChecked="True" Checked="FileFilter_Changed" Foreground="#F8FAFC" Margin="0,0,14,0" />
+                    <RadioButton x:Name="FilterMediaRadio" Content="錄影 / 錄音" GroupName="FileFilter" Checked="FileFilter_Changed" Foreground="#F8FAFC" Margin="0,0,14,0" />
+                    <RadioButton x:Name="FilterShotRadio" Content="螢幕截圖" GroupName="FileFilter" Checked="FileFilter_Changed" Foreground="#F8FAFC" />
+                </StackPanel>
+
+                <ListBox x:Name="FilesListBox"
+                         Grid.Row="2"
+                         Background="#111827"
+                         BorderBrush="#1F2937"
+                         BorderThickness="1"
+                         Foreground="#F8FAFC"
+                         MouseDoubleClick="FilesListBox_MouseDoubleClick">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="6,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="52" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="85" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="5" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TypeBadge}" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" />
+                                </Border>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="Medium" Foreground="#F8FAFC" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="{Binding FileSizeString}" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="12" />
+                                <TextBlock Grid.Column="3" Text="{Binding FormattedDate}" VerticalAlignment="Center" Foreground="#64748B" FontSize="12" />
+                                <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                    <Button Content="開啟" Tag="{Binding FullPath}" Click="OpenFileItem_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0" />
+                                    <Button Content="刪除" Tag="{Binding FullPath}" Click="DeleteFileItem_Click" Background="#7F1D1D" Foreground="White" BorderThickness="0" Padding="8,3" FontSize="11" Cursor="Hand" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Bottom Status / Toast Bar -->
+            <Border Grid.Row="1" Background="#111827" BorderBrush="#1F2937" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,14,0,0">
+                <DockPanel>
+                    <TextBlock x:Name="StatusFooterText" Text="就緒" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" />
+                    <TextBlock x:Name="HotkeyStatusText" Text="" FontSize="11.5" Foreground="#34D399" HorizontalAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                </DockPanel>
             </Border>
         </Grid>
-
-        <!-- Footer -->
-        <DockPanel Grid.Row="3" Margin="0,14,0,0">
-            <TextBlock Text="若你能看到此視窗，代表這台電腦允許執行未簽章的 .NET 8 綠色版程式！"
-                       Foreground="#34D399" FontSize="12" VerticalAlignment="Center" />
-            <Button Content="📋 複製檢測報告" Style="{StaticResource SecondaryButtonStyle}"
-                    HorizontalAlignment="Right" DockPanel.Dock="Right" Click="CopyReport_Click" />
-        </DockPanel>
     </Grid>
 </Window>

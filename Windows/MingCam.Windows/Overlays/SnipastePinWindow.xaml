@@ -1,0 +1,59 @@
+<Window x:Class="MingCam.Windows.Overlays.SnipastePinWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MingCam 貼圖"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        MouseDoubleClick="Window_MouseDoubleClick"
+        PreviewMouseWheel="Window_PreviewMouseWheel"
+        KeyDown="Window_KeyDown">
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="📋 複製到剪貼簿 (Ctrl+C)" Click="Copy_Click" />
+            <MenuItem Header="💾 另存 PNG 圖片 (Ctrl+S)" Click="SavePng_Click" />
+            <Separator />
+            <MenuItem Header="🔄 重設大小與透明度 (100%)" Click="Reset_Click" />
+            <MenuItem Header="✕ 關閉貼圖 (Esc / 雙擊)" Click="Close_Click" />
+        </ContextMenu>
+    </Window.ContextMenu>
+
+    <Border x:Name="OuterBorder"
+            Margin="6"
+            BorderBrush="#38BDF8"
+            BorderThickness="1.5"
+            CornerRadius="4"
+            Background="#F0111827">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.55" Color="Black" />
+        </Border.Effect>
+        <Grid>
+            <Image x:Name="PinnedImage" Stretch="Fill" Visibility="Collapsed" />
+            <Border x:Name="TextContainer" Padding="14,10" Visibility="Collapsed">
+                <TextBlock x:Name="PinnedText"
+                           Foreground="#F8FAFC"
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           MaxWidth="520" />
+            </Border>
+
+            <!-- Transient zoom/opacity HUD -->
+            <Border x:Name="HudBadge"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="6"
+                    Background="#CC0F172A"
+                    CornerRadius="6"
+                    Padding="8,3"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
+                <TextBlock x:Name="HudText" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" />
+            </Border>
+        </Grid>
+    </Border>
+</Window>

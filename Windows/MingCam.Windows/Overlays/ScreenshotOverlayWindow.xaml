@@ -1,0 +1,176 @@
+<Window x:Class="MingCam.Windows.Overlays.ScreenshotOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MingCam 截圖與標註"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Cursor="Cross"
+        Background="Black"
+        KeyDown="Window_KeyDown">
+    <Grid x:Name="RootGrid"
+          MouseLeftButtonDown="RootGrid_MouseLeftButtonDown"
+          MouseMove="RootGrid_MouseMove"
+          MouseLeftButtonUp="RootGrid_MouseLeftButtonUp"
+          MouseRightButtonDown="RootGrid_MouseRightButtonDown">
+
+        <!-- Frozen full-desktop screenshot -->
+        <Image x:Name="FrozenScreenImage" Stretch="Fill" IsHitTestVisible="False" />
+
+        <!-- Dark outer mask with cutout for selection -->
+        <Path x:Name="DimMaskPath" Fill="#88000000" IsHitTestVisible="False" />
+
+        <!-- Selection Border -->
+        <Canvas x:Name="OverlayCanvas" IsHitTestVisible="False">
+            <Rectangle x:Name="SelectionBorder"
+                       Stroke="#38BDF8"
+                       StrokeThickness="2"
+                       Visibility="Collapsed" />
+
+            <!-- Live dimensions badge -->
+            <Border x:Name="DimensionBadge"
+                    Background="#DD0F172A"
+                    CornerRadius="6"
+                    Padding="8,4"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="DimensionText"
+                           Foreground="#F8FAFC"
+                           FontFamily="Consolas"
+                           FontSize="12"
+                           FontWeight="SemiBold" />
+            </Border>
+        </Canvas>
+
+        <!-- Vector & Mosaic Annotation Canvas -->
+        <Canvas x:Name="AnnotationCanvas" IsHitTestVisible="False" />
+
+        <!-- Inline Text Tool Input -->
+        <Canvas x:Name="InteractiveCanvas">
+            <TextBox x:Name="InlineTextBox"
+                     Visibility="Collapsed"
+                     MinWidth="120"
+                     Padding="6,4"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Background="#DD0F172A"
+                     Foreground="#EF4444"
+                     BorderBrush="#38BDF8"
+                     BorderThickness="1.5"
+                     AcceptsReturn="False"
+                     KeyDown="InlineTextBox_KeyDown"
+                     LostFocus="InlineTextBox_LostFocus" />
+
+            <!-- Cursor Pixel Magnifier & Color Picker Loupe -->
+            <Border x:Name="LoupePanel"
+                    Background="#EE0F172A"
+                    BorderBrush="#475569"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="8"
+                    IsHitTestVisible="False"
+                    Visibility="Visible">
+                <StackPanel Width="148">
+                    <Grid Width="132" Height="96" ClipToBounds="True">
+                        <Image x:Name="LoupeImage"
+                               Stretch="Fill"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                        <Line X1="66" Y1="0" X2="66" Y2="96" Stroke="#AA38BDF8" StrokeThickness="1" />
+                        <Line X1="0" Y1="48" X2="132" Y2="48" Stroke="#AA38BDF8" StrokeThickness="1" />
+                        <Rectangle Width="12" Height="12" Stroke="#FFFFFF" StrokeThickness="1.2"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,2" VerticalAlignment="Center">
+                        <Border x:Name="LoupeSwatch" Width="16" Height="16" CornerRadius="4"
+                                BorderBrush="#94A3B8" BorderThickness="1" Margin="0,0,6,0" />
+                        <TextBlock x:Name="LoupeHexText" Text="#000000"
+                                   Foreground="#F8FAFC" FontFamily="Consolas" FontSize="12" FontWeight="Bold" />
+                    </StackPanel>
+                    <TextBlock x:Name="LoupeRgbText" Text="RGB(0, 0, 0)"
+                               Foreground="#94A3B8" FontFamily="Consolas" FontSize="10.5" />
+                    <TextBlock x:Name="LoupeHintText" Text="按 C 複製色碼 · Esc 取消"
+                               Foreground="#38BDF8" FontSize="10" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Floating PicPick 9-Tool Annotation & Action Toolbar -->
+            <Border x:Name="AnnotationToolbar"
+                    Visibility="Collapsed"
+                    Background="#F20F172A"
+                    BorderBrush="#334155"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="8,6"
+                    MouseLeftButtonDown="Toolbar_SwallowMouse">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="3" Opacity="0.5" Color="Black" />
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Row 1: 9 Annotation Tools + Undo/Clear + Output Actions -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="▭" ToolTip="矩形" Tag="Rectangle" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="◯" ToolTip="橢圓" Tag="Ellipse" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="↗" ToolTip="箭頭" Tag="Arrow" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="╱" ToolTip="直線" Tag="Line" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="✎" ToolTip="畫筆" Tag="Pen" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="🖍" ToolTip="螢光筆" Tag="Highlighter" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="▦" ToolTip="馬賽克" Tag="Mosaic" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="①" ToolTip="步驟序號章" Tag="Counter" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="A" ToolTip="文字標註" Tag="Text" Click="ToolButton_Click" Style="{StaticResource ToolBarBtn}" />
+
+                        <Border Width="1" Height="20" Background="#334155" Margin="6,0" />
+
+                        <Button Content="↩" ToolTip="復原 (Ctrl+Z)" Click="Undo_Click" Style="{StaticResource ToolBarBtn}" />
+                        <Button Content="🗑" ToolTip="清空標註" Click="Clear_Click" Style="{StaticResource ToolBarBtn}" />
+
+                        <Border Width="1" Height="20" Background="#334155" Margin="6,0" />
+
+                        <Button Content="📌 貼圖" Click="PinSelection_Click" Background="#0F766E" Foreground="White"
+                                Padding="9,4" Margin="2,0" BorderThickness="0" FontWeight="SemiBold" FontSize="12" Cursor="Hand" />
+                        <Button Content="📋 複製" Click="CopySelection_Click" Background="#2563EB" Foreground="White"
+                                Padding="9,4" Margin="2,0" BorderThickness="0" FontWeight="SemiBold" FontSize="12" Cursor="Hand" />
+                        <Button Content="💾 存檔" Click="SaveSelection_Click" Background="#334155" Foreground="White"
+                                Padding="9,4" Margin="2,0" BorderThickness="0" FontWeight="SemiBold" FontSize="12" Cursor="Hand" />
+                        <Button Content="✕" ToolTip="取消 (Esc)" Click="Cancel_Click" Background="#7F1D1D" Foreground="White"
+                                Padding="8,4" Margin="2,0" BorderThickness="0" FontWeight="Bold" FontSize="12" Cursor="Hand" />
+                    </StackPanel>
+
+                    <!-- Row 2: Color Palette & Stroke Width -->
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="顏色" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="2,0,6,0" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#EF4444" BorderBrush="White" BorderThickness="1.5" Tag="#EF4444" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#F97316" BorderBrush="#475569" BorderThickness="1" Tag="#F97316" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#EAB308" BorderBrush="#475569" BorderThickness="1" Tag="#EAB308" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#22C55E" BorderBrush="#475569" BorderThickness="1" Tag="#22C55E" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#3B82F6" BorderBrush="#475569" BorderThickness="1" Tag="#3B82F6" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#FFFFFF" BorderBrush="#475569" BorderThickness="1" Tag="#FFFFFF" Click="ColorSwatch_Click" Cursor="Hand" />
+                        <Button Width="18" Height="18" Margin="2,0" Background="#111827" BorderBrush="#475569" BorderThickness="1" Tag="#111827" Click="ColorSwatch_Click" Cursor="Hand" />
+
+                        <Border Width="1" Height="16" Background="#334155" Margin="10,0" />
+                        <TextBlock Text="粗細" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <Button Content="細" Tag="2" Click="StrokeWidth_Click" Style="{StaticResource ToolBarBtn}" FontSize="11" />
+                        <Button Content="中" Tag="4" Click="StrokeWidth_Click" Style="{StaticResource ToolBarBtn}" FontSize="11" />
+                        <Button Content="粗" Tag="7" Click="StrokeWidth_Click" Style="{StaticResource ToolBarBtn}" FontSize="11" />
+
+                        <TextBlock x:Name="ActiveToolIndicator" Text="目前：拖曳標註（箭頭）"
+                                   Foreground="#38BDF8" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Canvas>
+    </Grid>
+
+    <Window.Resources>
+        <Style x:Key="ToolBarBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="Foreground" Value="#E2E8F0" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+</Window>
