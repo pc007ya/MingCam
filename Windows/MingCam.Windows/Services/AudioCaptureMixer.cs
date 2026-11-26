@@ -26,7 +26,6 @@ internal sealed class AudioCaptureMixer : IDisposable
     private WasapiCapture? _mic;
     private BufferedWaveProvider? _loopbackBuffer;
     private BufferedWaveProvider? _micBuffer;
-    private WaveOutEvent? _silencePlayer;
 
     private CancellationTokenSource? _cts;
     private Task? _pumpTask;
@@ -176,7 +175,6 @@ internal sealed class AudioCaptureMixer : IDisposable
 
         try { _loopback?.StopRecording(); } catch { }
         try { _mic?.StopRecording(); } catch { }
-        try { _silencePlayer?.Stop(); } catch { }
     }
 
     public void Dispose()
@@ -184,7 +182,6 @@ internal sealed class AudioCaptureMixer : IDisposable
         Stop();
         _loopback?.Dispose();
         _mic?.Dispose();
-        _silencePlayer?.Dispose();
         _cts?.Dispose();
     }
 }

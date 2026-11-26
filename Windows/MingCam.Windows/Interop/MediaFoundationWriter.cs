@@ -41,6 +41,15 @@ internal sealed class MediaFoundationWriter : IDisposable
     public bool HasVideo => _videoStreamIndex >= 0;
     public bool HasAudio => _audioStreamIndex >= 0;
 
+    [DllImport("mfplat.dll", ExactSpelling = true, PreserveSig = false)]
+    private static extern void MFCreateMediaType(out IMFMediaType ppMFType);
+
+    [DllImport("mfplat.dll", ExactSpelling = true, PreserveSig = false)]
+    private static extern void MFCreateMemoryBuffer(int cbMaxLength, out IMFMediaBuffer ppBuffer);
+
+    [DllImport("mfplat.dll", ExactSpelling = true, PreserveSig = false)]
+    private static extern void MFCreateSample(out IMFSample ppIMFSample);
+
     public MediaFoundationWriter(
         string outputPath,
         bool enableVideo,
@@ -58,7 +67,7 @@ internal sealed class MediaFoundationWriter : IDisposable
         VideoHeight = enableVideo ? Math.Max(2, height & ~1) : 0;
         Fps = Math.Max(1, fps);
 
-        MediaFoundationInterop.MFCreateSinkWriterFromURL(outputPath, IntPtr.Zero, null, out _sinkWriter);
+        MediaFoundationInterop.MFCreateSinkWriterFromURL(outputPath, null, null, out _sinkWriter);
 
         if (enableVideo)
         {
@@ -70,12 +79,12 @@ internal sealed class MediaFoundationWriter : IDisposable
             ConfigureAudioStream(audioSampleRate, audioChannels);
         }
 
-        _sinkWriter.BeginWriting();
+        _sinkWriter!.BeginWriting();
     }
 
     private void ConfigureVideoStream(int width, int height, int fps)
     {
-        MediaFoundationInterop.MFCreateMediaType(out IMFMediaType outType);
+        MFCreateMediaType(out IMFMediaType outType);
         outType.SetGUID(MediaFoundationAttributes.MF_MT_MAJOR_TYPE, MFMediaType_Video);
         outType.SetGUID(MediaFoundationAttributes.MF_MT_SUBTYPE, MFVideoFormat_H264);
         outType.SetUINT32(MF_MT_AVG_BITRATE, CalculateBitrate(width, height, fps));
@@ -87,7 +96,7 @@ internal sealed class MediaFoundationWriter : IDisposable
         _sinkWriter!.AddStream(outType, out _videoStreamIndex);
         Marshal.ReleaseComObject(outType);
 
-        MediaFoundationInterop.MFCreateMediaType(out IMFMediaType inType);
+        MFCreateMediaType(out IMFMediaType inType);
         inType.SetGUID(MediaFoundationAttributes.MF_MT_MAJOR_TYPE, MFMediaType_Video);
         inType.SetGUID(MediaFoundationAttributes.MF_MT_SUBTYPE, MFVideoFormat_RGB32);
         inType.SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
@@ -102,7 +111,7 @@ internal sealed class MediaFoundationWriter : IDisposable
 
     private void ConfigureAudioStream(int sampleRate, int channels)
     {
-        MediaFoundationInterop.MFCreateMediaType(out IMFMediaType outType);
+        MFCreateMediaType(out IMFMediaType outType);
         outType.SetGUID(MediaFoundationAttributes.MF_MT_MAJOR_TYPE, MFMediaType_Audio);
         outType.SetGUID(MediaFoundationAttributes.MF_MT_SUBTYPE, MFAudioFormat_AAC);
         outType.SetUINT32(MediaFoundationAttributes.MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
@@ -116,7 +125,7 @@ internal sealed class MediaFoundationWriter : IDisposable
         Marshal.ReleaseComObject(outType);
 
         int blockAlign = channels * 2;
-        MediaFoundationInterop.MFCreateMediaType(out IMFMediaType inType);
+        MFCreateMediaType(out IMFMediaType inType);
         inType.SetGUID(MediaFoundationAttributes.MF_MT_MAJOR_TYPE, MFMediaType_Audio);
         inType.SetGUID(MediaFoundationAttributes.MF_MT_SUBTYPE, MFAudioFormat_PCM);
         inType.SetUINT32(MediaFoundationAttributes.MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
@@ -153,7 +162,7 @@ internal sealed class MediaFoundationWriter : IDisposable
 
     private void WriteSampleInternal(int streamIndex, byte[] data, int byteCount, long timestampHns, long durationHns)
     {
-        MediaFoundationInterop.MFCreateMemoryBuffer(byteCount, out IMFMediaBuffer buffer);
+        MFCreateMemoryBuffer(byteCount, out IMFMediaBuffer buffer);
         IMFSample? sample = null;
         try
         {
@@ -169,8 +178,8 @@ internal sealed class MediaFoundationWriter : IDisposable
 
             buffer.SetCurrentLength(byteCount);
 
-            MediaFoundationInterop.MFCreateSample(out sample);
-            sample.AddBuffer(buffer);
+            MFCreateSample(out sample);
+            sample!.AddBuffer(buffer);
             sample.SetSampleTime(timestampHns);
             sample.SetSampleDuration(durationHns);
 
@@ -193,7 +202,7 @@ internal sealed class MediaFoundationWriter : IDisposable
             _isFinalized = true;
             try
             {
-                _sinkWriter.Finalize();
+                _sinkWriter.DoFinalize();
             }
             catch
             {
