@@ -506,43 +506,94 @@
     }
 
     /* Features */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
+    .features-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
     }
 
-    .feature-card {
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 32px;
+      align-items: center;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 28px;
+      border-radius: var(--radius-lg);
+      padding: 24px;
       box-shadow: var(--shadow-sm);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      transition: box-shadow 0.2s ease;
     }
 
-    .feature-card:hover {
-      transform: translateY(-2px);
+    .feature-row:hover {
       box-shadow: var(--shadow-md);
+    }
+
+    .feature-row.reverse {
+      grid-template-columns: 0.82fr 1.18fr;
+    }
+
+    .feature-row.reverse .feature-media {
+      order: 2;
+    }
+
+    .feature-media {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #141517;
+      cursor: zoom-in;
+      aspect-ratio: 16 / 9;
+    }
+
+    .feature-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+
+    .feature-media:hover img {
+      transform: scale(1.025);
+    }
+
+    .feature-media-hint {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      background: rgba(20, 21, 23, 0.78);
+      color: #f4f4f5;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+
+    .feature-body {
+      padding: 6px 8px;
     }
 
     .feature-num {
       font-family: var(--font-mono);
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--ink-muted);
-      margin-bottom: 14px;
-    }
-
-    .feature-card h3 {
-      font-size: 1.18rem;
-      font-weight: 700;
+      color: var(--accent);
       margin-bottom: 10px;
-      letter-spacing: -0.015em;
     }
 
-    .feature-card p {
-      font-size: 0.92rem;
+    .feature-body h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .feature-body p {
+      font-size: 0.94rem;
       color: var(--ink-secondary);
       margin-bottom: 16px;
     }
@@ -551,8 +602,8 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      font-size: 0.88rem;
+      gap: 9px;
+      font-size: 0.9rem;
       color: var(--ink-secondary);
     }
 
@@ -567,6 +618,32 @@
       left: 0;
       color: var(--accent);
       font-weight: 700;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(15, 17, 21, 0.86);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      cursor: zoom-out;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: min(1180px, 96vw);
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
     /* Downloads */
@@ -804,10 +881,15 @@
 
     @media (max-width: 900px) {
       .hero-grid,
-      .features-grid,
+      .feature-row,
+      .feature-row.reverse,
       .download-grid,
       .shortcuts-grid {
         grid-template-columns: 1fr;
+      }
+
+      .feature-row.reverse .feature-media {
+        order: 0;
       }
 
       .nav-links {
@@ -958,41 +1040,59 @@
           <p>免去同時安裝多套截圖與錄影軟體的困擾，全部採用系統原生擷取管線，啟動快速、資源佔用低。</p>
         </div>
 
-        <div class="features-grid">
-          <article class="feature-card">
-            <div class="feature-num">01 / RECORDING</div>
-            <h3>螢幕錄影與系統內錄</h3>
-            <p>直接透過系統原生擷取 API 錄製高畫質影片與數位音訊，完全免裝第三方虛擬音效卡。</p>
-            <ul class="feature-list">
-              <li>全螢幕、矩形穿透框、指定單一視窗錄製</li>
-              <li>30 / 60 FPS H.264 `.mp4`，無時長與浮水印限制</li>
-              <li>純音訊內錄 `.m4a`（AAC 48kHz / 192kbps）</li>
-              <li>無縫暫停與繼續，自動校正時間軸</li>
-            </ul>
+        <div class="features-stack">
+          <article class="feature-row">
+            <div class="feature-media" data-lightbox="assets/recorder-panel.jpg" role="button" tabindex="0" aria-label="放大檢視錄影與音訊內錄面板">
+              <img src="assets/recorder-panel.jpg" alt="MingCam 螢幕錄影與系統音訊內錄控制面板" loading="lazy" />
+              <span class="feature-media-hint">點擊放大檢視</span>
+            </div>
+            <div class="feature-body">
+              <div class="feature-num">01 / RECORDING &amp; LOOPBACK AUDIO</div>
+              <h3>螢幕錄影與系統音訊內錄面板</h3>
+              <p>透過系統原生擷取管線直接錄製高畫質影片與數位音訊，完全免安裝第三方虛擬音效卡與外掛編碼器。</p>
+              <ul class="feature-list">
+                <li>四種擷取模式：全螢幕、矩形穿透框、指定視窗、純音訊內錄</li>
+                <li>30 / 60 FPS H.264 <code>.mp4</code>，完全無時長與浮水印限制</li>
+                <li>支援純系統音訊／麥克風 <code>.m4a</code>（AAC 48kHz / 192kbps）</li>
+                <li>無縫暫停與繼續，自動校正時間軸不留黑畫面</li>
+              </ul>
+            </div>
           </article>
 
-          <article class="feature-card">
-            <div class="feature-num">02 / SNIPASTE PIN</div>
-            <h3>框選截圖與懸浮貼圖</h3>
-            <p>凍結畫面後精準框選，並可將任意參考圖、報表或文字釘選於所有視窗最上層。</p>
-            <ul class="feature-list">
-              <li>游標像素放大鏡，即時顯示座標與 HEX / RGB 色碼</li>
-              <li>支援截圖、剪貼簿圖片與剪貼簿文字直接貼圖</li>
-              <li>滑鼠滾輪平滑縮放（25% – 400%）</li>
-              <li>組合鍵 + 滾輪調整透明度（20% – 100%）</li>
-            </ul>
+          <article class="feature-row reverse">
+            <div class="feature-media" data-lightbox="assets/snipaste-panel.jpg" role="button" tabindex="0" aria-label="放大檢視懸浮貼圖與像素放大鏡取色面板">
+              <img src="assets/snipaste-panel.jpg" alt="MingCam Snipaste 風格懸浮貼圖與像素取色放大鏡面板" loading="lazy" />
+              <span class="feature-media-hint">點擊放大檢視</span>
+            </div>
+            <div class="feature-body">
+              <div class="feature-num">02 / SNIPASTE PIN &amp; COLOR LOUPE</div>
+              <h3>懸浮貼圖與像素放大鏡取色</h3>
+              <p>將截圖、剪貼簿圖片或文字直接釘選於所有視窗最上層，搭配像素級放大鏡隨時吸取準確色碼。</p>
+              <ul class="feature-list">
+                <li>游標像素放大鏡即時顯示座標與 <code>HEX / RGB</code> 色碼（按 <code>C</code> 複製）</li>
+                <li>滑鼠滾輪平滑縮放貼圖大小（25% – 400%）</li>
+                <li><code>Option / Alt</code> + 滾輪即時調整貼圖透明度（20% – 100%）</li>
+                <li>雙擊貼圖立即關閉，右鍵選單快速複製或另存 PNG</li>
+              </ul>
+            </div>
           </article>
 
-          <article class="feature-card">
-            <div class="feature-num">03 / ANNOTATION</div>
-            <h3>PicPick 風格即時標註</h3>
-            <p>截圖當下立即畫重點、打馬賽克與標記操作步驟，完成後一鍵複製、貼圖或存檔。</p>
-            <ul class="feature-list">
-              <li>內建 9 種工具：矩形、橢圓、箭頭、直線、畫筆等</li>
-              <li>螢光筆、敏感資訊馬賽克遮罩與文字標註</li>
-              <li>自動遞增步驟序號章（① ② ③）</li>
-              <li>背景全域快捷鍵，視窗縮小也能隨時呼出</li>
-            </ul>
+          <article class="feature-row">
+            <div class="feature-media" data-lightbox="assets/annotation-panel.jpg" role="button" tabindex="0" aria-label="放大檢視 9 種 PicPick 即時標註工具列面板">
+              <img src="assets/annotation-panel.jpg" alt="MingCam PicPick 風格 9 種即時標註工具列面板" loading="lazy" />
+              <span class="feature-media-hint">點擊放大檢視</span>
+            </div>
+            <div class="feature-body">
+              <div class="feature-num">03 / PICPICK 9-TOOL ANNOTATION</div>
+              <h3>9 種 PicPick 風格即時標註工具列</h3>
+              <p>框選截圖後立即浮現工具列，現場畫箭頭、標序號、打馬賽克，完成後一鍵釘選貼圖、複製或存檔。</p>
+              <ul class="feature-list">
+                <li>內建 9 種工具：矩形、橢圓、箭頭、直線、畫筆、螢光筆、馬賽克、序號章、文字</li>
+                <li>自動遞增步驟序號章（① ② ③）與真實像素馬賽克遮罩</li>
+                <li>7 色調色盤、3 段筆觸粗細、<code>⌘Z / Ctrl+Z</code> 復原與一鍵清空</li>
+                <li>背景全域快捷鍵，視窗縮小也能隨時呼出</li>
+              </ul>
+            </div>
           </article>
         </div>
       </div>
@@ -1225,6 +1325,10 @@
     </div>
   </footer>
 
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <img id="lightbox-img" src="" alt="放大預覽" />
+  </div>
+
   <script>
     // Interactive mode showcase tabs
     document.querySelectorAll('.showcase-tab').forEach((btn) => {
@@ -1238,6 +1342,34 @@
           panel.classList.toggle('active', panel.id === 'panel-' + target);
         });
       });
+    });
+
+    // Feature panel lightbox zoom
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    document.querySelectorAll('[data-lightbox]').forEach((el) => {
+      const openBox = () => {
+        lightboxImg.src = el.dataset.lightbox;
+        lightbox.classList.add('open');
+        lightbox.setAttribute('aria-hidden', 'false');
+      };
+      el.addEventListener('click', openBox);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openBox();
+        }
+      });
+    });
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+        lightbox.classList.remove('open');
+        lightbox.setAttribute('aria-hidden', 'true');
+      }
     });
 
     // Copy build command

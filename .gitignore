@@ -8,6 +8,8 @@ build/
 *.png
 *.jpg
 *.jpeg
+!docs/assets/*.jpg
+!docs/assets/*.png
 
 # .NET / Windows build artifacts
 **/bin/
