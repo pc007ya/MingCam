@@ -317,6 +317,10 @@ public sealed class ScreenRecorderEngine : IDisposable
                 }
             }
         }
+        catch (Exception ex)
+        {
+            LastError = $"VideoCaptureLoop error: {ex.Message}";
+        }
         finally
         {
             pinned.Free();

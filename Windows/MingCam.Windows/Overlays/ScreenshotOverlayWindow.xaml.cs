@@ -150,6 +150,85 @@ public partial class ScreenshotOverlayWindow : Window
         Focus();
     }
 
+    public void SetupDemoAnnotationState()
+    {
+        double w = Math.Max(800, ActualWidth);
+        double h = Math.Max(600, ActualHeight);
+        double rx = Math.Round(w * 0.14);
+        double ry = Math.Round(h * 0.10);
+        double rw = Math.Round(w * 0.72);
+        double rh = Math.Round(h * 0.66);
+
+        _selectionRect = new Rect(rx, ry, rw, rh);
+        _hasSelection = true;
+
+        Canvas.SetLeft(SelectionBorder, rx);
+        Canvas.SetTop(SelectionBorder, ry);
+        SelectionBorder.Width = rw;
+        SelectionBorder.Height = rh;
+        SelectionBorder.Visibility = Visibility.Visible;
+
+        DimensionText.Text = $"{(int)Math.Round(rw * _dpiScaleX)} × {(int)Math.Round(rh * _dpiScaleY)} px";
+        Canvas.SetLeft(DimensionBadge, rx);
+        Canvas.SetTop(DimensionBadge, Math.Max(4, ry - 28));
+        DimensionBadge.Visibility = Visibility.Visible;
+
+        LoupePanel.Visibility = Visibility.Collapsed;
+        UpdateDimMask(_selectionRect);
+
+        _shapes.Clear();
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Rectangle,
+            Color = Color.FromRgb(56, 189, 248),
+            LineWidth = 3,
+            Points = new List<Point> { new(rx + 24, ry + 16), new(rx + rw * 0.42, ry + 82) }
+        });
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Arrow,
+            Color = Color.FromRgb(239, 68, 68),
+            LineWidth = 4,
+            Points = new List<Point> { new(rx + rw * 0.56, ry + 115), new(rx + rw * 0.74, ry + 56) }
+        });
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Counter,
+            Color = Color.FromRgb(239, 68, 68),
+            LineWidth = 4,
+            StepNumber = 1,
+            Points = new List<Point> { new(rx + rw * 0.54, ry + 118) }
+        });
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Counter,
+            Color = Color.FromRgb(239, 68, 68),
+            LineWidth = 4,
+            StepNumber = 2,
+            Points = new List<Point> { new(rx + rw * 0.80, ry + 56) }
+        });
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Highlighter,
+            Color = Color.FromRgb(234, 179, 8),
+            LineWidth = 4,
+            Points = new List<Point> { new(rx + 36, ry + 175), new(rx + rw * 0.46, ry + 175) }
+        });
+        _shapes.Add(new AnnotationShape
+        {
+            Tool = AnnotationTool.Text,
+            Color = Color.FromRgb(239, 68, 68),
+            LineWidth = 3,
+            Text = "一鍵開始錄影 / 截圖標註",
+            Points = new List<Point> { new(rx + rw * 0.50, ry + 145) }
+        });
+
+        RedrawAnnotations();
+        PositionToolbar();
+        AnnotationToolbar.Visibility = Visibility.Visible;
+        UpdateLayout();
+    }
+
     private void UpdateDimMask(Rect hole)
     {
         var full = new RectangleGeometry(new Rect(0, 0, ActualWidth, ActualHeight));

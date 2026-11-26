@@ -71,7 +71,18 @@ public partial class App : Application
             SavePng(screenshotBmp, Path.Combine(outDir, "screenshot-panel.png"));
             logs.Add("PASS: Rendered real Screenshot & Snipaste Workspace UI (screenshot-panel.png)");
 
-            // 3. Verify RegionOverlayWindow & SnipastePinWindow instantiate cleanly
+            // 3. Capture Real PicPick 9-Tool Annotation Overlay Panel
+            var shotOverlay = new ScreenshotOverlayWindow(false, win.RecorderEngine.OutputDirectory, null, null, null);
+            shotOverlay.Show();
+            await Task.Delay(250);
+            shotOverlay.SetupDemoAnnotationState();
+            await Task.Delay(200);
+            var annotBmp = RenderElementToBitmap(shotOverlay);
+            SavePng(annotBmp, Path.Combine(outDir, "annotation-panel.png"));
+            shotOverlay.Close();
+            logs.Add("PASS: Rendered real PicPick 9-tool Annotation Overlay UI (annotation-panel.png)");
+
+            // 4. Verify RegionOverlayWindow & SnipastePinWindow instantiate cleanly
             var regionWin = new RegionOverlayWindow();
             regionWin.Show();
             await Task.Delay(150);
@@ -85,7 +96,7 @@ public partial class App : Application
             pinWin.Close();
             logs.Add("PASS: SnipastePinWindow verified");
 
-            // 4. Verify real 1-second H.264 MP4 recording via ScreenRecorderEngine
+            // 5. Verify real 1-second H.264 MP4 recording via ScreenRecorderEngine
             bool started = win.RecorderEngine.StartRecording(
                 CaptureMode.FullScreen,
                 fps: 30,
@@ -106,7 +117,7 @@ public partial class App : Application
                 }
                 else
                 {
-                    logs.Add("WARN: Recording finished but output file was empty");
+                    logs.Add($"WARN: Recording finished but output file was empty (LastError={win.RecorderEngine.LastError})");
                 }
             }
             else
