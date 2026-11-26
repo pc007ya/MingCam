@@ -10,6 +10,19 @@
         Cursor="Cross"
         Background="Black"
         KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <Style x:Key="ToolBarBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="Foreground" Value="#E2E8F0" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+
     <Grid x:Name="RootGrid"
           MouseLeftButtonDown="RootGrid_MouseLeftButtonDown"
           MouseMove="RootGrid_MouseMove"
@@ -160,17 +173,4 @@
             </Border>
         </Canvas>
     </Grid>
-
-    <Window.Resources>
-        <Style x:Key="ToolBarBtn" TargetType="Button">
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="Foreground" Value="#E2E8F0" />
-            <Setter Property="BorderBrush" Value="#334155" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="7,3" />
-            <Setter Property="Margin" Value="2,0" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-    </Window.Resources>
 </Window>
