@@ -33,20 +33,44 @@
 
 ---
 
+## 📁 專案結構
+
+- `macOS/` — macOS 原生版本（SwiftUI + ScreenCaptureKit + AVFoundation + Carbon）
+- `Windows/` — Windows 原生版本（C# + .NET 8 WPF，Self-Contained 綠色免安裝版，目前為環境檢測基礎框架）
+
+---
+
 ## 🛠 編譯與執行
 
-### 系統需求
+### macOS 版
+#### 系統需求
 - macOS 14.0 (Sonoma) 或以上版本（Apple Silicon / Intel）
 - Xcode 或 Xcode Command Line Tools
 
-### 一鍵編譯 `.app`
+#### 一鍵編譯 `.app`
 ```bash
+cd macOS
 chmod +x build_app.sh
 ./build_app.sh
 open ../MingCam.app
 ```
 
 首次執行錄影或截圖時，請於 **「系統設定 > 隱私權與安全性 > 螢幕與系統音訊錄製」** 中勾選允許 `MingCam`。
+
+---
+
+### Windows 版（免安裝綠色版）
+#### 方式一：從 GitHub Actions 直接下載
+1. 前往 GitHub 專案的 **Actions** 頁籤，選擇最新的 **Build MingCam Windows (Portable)** 執行紀錄。
+2. 在頁面下方 **Artifacts** 下載 `MingCam-Windows-x64-Portable`。
+3. 解壓縮後直接點兩下 `MingCam.exe` 即可執行（免安裝、免系統管理員權限）。
+
+#### 方式二：本機編譯（需 .NET 8 SDK）
+```powershell
+dotnet publish Windows/MingCam.Windows/MingCam.Windows.csproj `
+  -c Release -r win-x64 --self-contained true `
+  -o publish/MingCam-Windows-x64
+```
 
 ---
 

@@ -8,3 +8,12 @@ build/
 *.png
 *.jpg
 *.jpeg
+
+# .NET / Windows build artifacts
+**/bin/
+**/obj/
+**/publish/
+*.user
+*.suo
+.vs/
+*.zip
