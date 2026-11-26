@@ -16,6 +16,7 @@ using MingCam.Windows.Interop;
 using MingCam.Windows.Models;
 using MingCam.Windows.Overlays;
 using MingCam.Windows.Services;
+using CaptureMode = MingCam.Windows.Models.CaptureMode;
 
 namespace MingCam.Windows;
 

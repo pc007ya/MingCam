@@ -7,7 +7,7 @@ using MingCam.Windows.Models;
 
 namespace MingCam.Windows.Interop;
 
-internal static class NativeMethods
+public static class NativeMethods
 {
     public const int GWL_EXSTYLE = -20;
     public const int WS_EX_TRANSPARENT = 0x00000020;
