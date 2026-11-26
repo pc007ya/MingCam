@@ -1,0 +1,10 @@
+.DS_Store
+.build_tmp/
+build/
+*.app
+*.mp4
+*.mov
+*.m4a
+*.png
+*.jpg
+*.jpeg

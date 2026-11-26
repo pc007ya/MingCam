@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>zh_TW</string>
+    <key>CFBundleExecutable</key>
+    <string>MingCam</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.ming.MingCam</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>MingCam</string>
+    <key>CFBundleDisplayName</key>
+    <string>MingCam 螢幕錄影</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>MingCam 需要螢幕與系統音訊錄製權限，以便為您錄製無時間限制的螢幕畫面與電腦內部聲音。</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>MingCam 需要麥克風權限，以便在錄影或錄音時同步收錄您的語音。</string>
+</dict>
+</plist>
