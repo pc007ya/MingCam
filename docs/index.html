@@ -1060,9 +1060,9 @@
               <div class="dl-header">
                 <div>
                   <h3 class="dl-platform">Windows 綠色免安裝版</h3>
-                  <p class="dl-sub">C# · .NET 8 WPF · Self-Contained Portable</p>
+                  <p class="dl-sub">C# · .NET 8 WPF · Media Foundation · WASAPI</p>
                 </div>
-                <span class="status-tag status-preview">v0.1.0 環境檢測版</span>
+                <span class="status-tag status-stable">v1.0 完整版</span>
               </div>
               <dl class="dl-specs" style="margin-top:18px;">
                 <div>
@@ -1078,22 +1078,22 @@
                   <dd>已內包 .NET 8，解壓即用</dd>
                 </div>
                 <div>
-                  <dt>目前版本內容</dt>
-                  <dd>公司環境與 4 項權限一鍵自檢</dd>
+                  <dt>功能狀態</dt>
+                  <dd>全功能已就緒（錄影＋內錄＋貼圖＋標註）</dd>
                 </div>
               </dl>
             </div>
 
             <div class="dl-actions">
-              <a href="https://github.com/pc007ya/MingCam/actions/runs/45816559891" target="_blank" rel="noopener" class="btn btn-blue" id="dl-windows-latest">
-                前往下載 Portable ZIP
+              <a href="https://github.com/pc007ya/MingCam/actions/runs/45819730132" target="_blank" rel="noopener" class="btn btn-blue" id="dl-windows-latest">
+                下載 Windows v1.0 Portable ZIP
               </a>
               <a href="https://github.com/pc007ya/MingCam/actions/workflows/build-windows.yml" target="_blank" rel="noopener" class="btn btn-outline" id="dl-windows-all">
                 所有建置版本 (Actions)
               </a>
             </div>
             <p class="dl-note">
-              在 GitHub Actions 頁面下方 <strong>Artifacts</strong> 點擊 <code>MingCam-Windows-x64-Portable</code> 即可下載；解壓後直接點兩下 <code>MingCam.exe</code>（若公司啟用 AppLocker / WDAC，可藉此先確認執行權限）。
+              在 GitHub Actions 頁面下方 <strong>Artifacts</strong> 點擊 <code>MingCam-Windows-x64-Portable</code> 即可下載；解壓後直接點兩下 <code>MingCam.exe</code>（免裝 .NET、免裝 FFmpeg、免裝虛擬音效卡）。
             </p>
           </article>
         </div>
@@ -1107,19 +1107,19 @@
                 <tr>
                   <th>功能模組</th>
                   <th>macOS 原生版 (v1.0)</th>
-                  <th>Windows 綠色版 (開發路線)</th>
+                  <th>Windows 綠色版 (v1.0)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>免安裝 / 權限模式</td>
-                  <td>原生 `.app` 封裝</td>
-                  <td class="ok">✓ 已就緒（免 UAC・免 .NET 安裝）</td>
+                  <td class="ok">✓ 原生 `.app` 封裝</td>
+                  <td class="ok">✓ 綠色免安裝（免 UAC・免 .NET 安裝）</td>
                 </tr>
                 <tr>
                   <td>全域快捷鍵</td>
                   <td class="ok">✓ Carbon 全域熱鍵</td>
-                  <td class="ok">✓ Win32 RegisterHotKey（檢測版已驗證）</td>
+                  <td class="ok">✓ Win32 RegisterHotKey（F1 / F3 / Ctrl+Shift+C / R）</td>
                 </tr>
                 <tr>
                   <td>中空穿透錄影框（不錄入邊框）</td>
@@ -1129,17 +1129,17 @@
                 <tr>
                   <td>框選截圖、放大鏡取色與 9 種標註</td>
                   <td class="ok">✓ 完整支援</td>
-                  <td class="wip">● 開發規劃中（WPF Canvas）</td>
+                  <td class="ok">✓ 完整支援（放大鏡 + 9 工具即時標註）</td>
                 </tr>
                 <tr>
                   <td>Snipaste 風格螢幕懸浮貼圖</td>
                   <td class="ok">✓ 完整支援</td>
-                  <td class="wip">● 開發規劃中（Topmost 透明視窗）</td>
+                  <td class="ok">✓ 完整支援（滾輪縮放 + Alt 滾輪調透明度）</td>
                 </tr>
                 <tr>
                   <td>螢幕錄影與系統音訊內錄</td>
                   <td class="ok">✓ ScreenCaptureKit + AVFoundation</td>
-                  <td class="wip">● 開發規劃中（WGC + WASAPI Loopback）</td>
+                  <td class="ok">✓ Media Foundation H.264/AAC + WASAPI Loopback</td>
                 </tr>
               </tbody>
             </table>

@@ -36,7 +36,7 @@
 ## 📁 專案結構
 
 - `macOS/` — macOS 原生版本（SwiftUI + ScreenCaptureKit + AVFoundation + Carbon）
-- `Windows/` — Windows 原生版本（C# + .NET 8 WPF，Self-Contained 綠色免安裝版，目前為環境檢測基礎框架）
+- `Windows/` — Windows 原生完整版（C# + .NET 8 WPF + Media Foundation + WASAPI Loopback，Self-Contained 綠色免安裝版）
 
 ---
 
