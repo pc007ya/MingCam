@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MingCam Web — 免安裝瀏覽器版螢幕錄影・截圖標註・PiP 貼圖</title>
+  <meta name="description" content="MingCam 網頁版：免安裝、免 .exe、免系統管理員權限。直接在 Chrome / Edge 瀏覽器進行螢幕錄影、系統音訊內錄、9 種 PicPick 標註、螢幕取色與 PiP 浮動貼圖，所有資料 100% 本機處理不上傳。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #17191f;
+      --header: #1c1e26;
+      --strip: #23262e;
+      --card: #1e2028;
+      --card-deep: #13151b;
+      --border: #2a2d38;
+      --border-soft: #252834;
+      --ink: #f8fafc;
+      --ink-secondary: #cbd5e1;
+      --ink-muted: #8e95a5;
+      --red: #dc2626;
+      --cyan: #06b6d4;
+      --teal: #0f766e;
+      --green: #4ade80;
+      --font-sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font-family: inherit; cursor: pointer; }
+
+    /* 1. Top Header Bar */
+    .top-header {
+      background: var(--header);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      flex-shrink: 0;
+    }
+
+    .brand-circle.shot-mode {
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .badge-web {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--green);
+    }
+
+    .brand-sub {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+    }
+
+    .workspace-switcher {
+      display: inline-flex;
+      background: #111318;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 3px;
+    }
+
+    .ws-btn {
+      border: none;
+      background: transparent;
+      color: #b4bcc8;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 7px;
+      transition: all 0.15s ease;
+    }
+
+    .ws-btn.active-rec {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .ws-btn.active-shot {
+      background: var(--cyan);
+      color: #05131a;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-cyan-outline {
+      background: rgba(6, 182, 212, 0.16);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.5);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-teal-outline {
+      background: rgba(20, 184, 166, 0.16);
+      color: #2dd4bf;
+      border: 1px solid rgba(20, 184, 166, 0.5);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .timer-pill {
+      background: #111318;
+      border-radius: 7px;
+      padding: 5px 11px;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 106px;
+      text-align: center;
+    }
+
+    .timer-pill.recording { color: #f87171; }
+    .timer-pill.paused { color: #facc15; }
+
+    .btn-pause {
+      background: #ea580c;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 11px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .btn-rec {
+      background: linear-gradient(180deg, #e62633, #bf141f);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 15px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn-rec.stopping {
+      background: #64748b;
+    }
+
+    /* 2. Sub-Mode Strip */
+    .sub-strip {
+      background: var(--strip);
+      border-bottom: 1px solid #2e323e;
+      padding: 9px 18px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .mode-btn {
+      background: var(--card);
+      color: #b4bcc8;
+      border: 1px solid #2d313d;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn:hover { background: #262936; color: #fff; }
+    .mode-btn.active-rec { background: #2a2f3e; border-color: #ef4444; color: #fff; font-weight: 700; }
+    .mode-btn.active-shot { background: #18303c; border-color: #22d3ee; color: #fff; font-weight: 700; }
+
+    /* 3. Hover Feature Banner */
+    .hover-banner {
+      background: #1c212b;
+      border-bottom: 1px solid #262b38;
+      padding: 6px 18px;
+      font-size: 11.5px;
+      color: #b8c1ce;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hover-banner strong { color: #38bdf8; }
+
+    /* 4. Main Two-Column Workspace */
+    .workspace {
+      flex: 1;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .card:last-child { margin-bottom: 0; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .radio-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12.5px;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      background: #0891b2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover { background: #0e7490; }
+
+    .btn-teal {
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: #252936;
+      color: #e2e8f0;
+      border: 1px solid #353b4d;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn-secondary:hover { background: #303546; }
+
+    .btn-danger {
+      background: #7f1d1d;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Color history pills */
+    .color-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .color-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #111318;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 8px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .swatch-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    /* Right Column: Live Video / Annotation Stage + Output Files */
+    .stage-box {
+      background: #0f1117;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-box video {
+      width: 100%;
+      max-height: 360px;
+      display: block;
+      background: #000;
+    }
+
+    .stage-placeholder {
+      text-align: center;
+      padding: 36px 20px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    /* Annotation Editor Canvas */
+    .annot-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px;
+      background: #13151b;
+      border: 1px solid var(--border-soft);
+      border-radius: 9px;
+      margin-bottom: 10px;
+    }
+
+    .tool-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tool-btn.active {
+      background: #0f766e;
+      border-color: #14b8a6;
+      color: #fff;
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: #334155;
+      margin: 0 4px;
+    }
+
+    .swatch-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid transparent;
+    }
+
+    .swatch-btn.active { border-color: #fff; }
+
+    .canvas-wrap {
+      background: #0d0f14;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      min-height: 320px;
+      max-height: 460px;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    #annotCanvas {
+      max-width: 100%;
+      max-height: 440px;
+      cursor: crosshair;
+      display: none;
+    }
+
+    /* File Library List */
+    .file-list {
+      background: var(--card-deep);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 72px 125px auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1e222d;
+      font-size: 12px;
+    }
+
+    .file-row:last-child { border-bottom: none; }
+
+    .file-badge {
+      background: #1f2937;
+      color: #38bdf8;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .file-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #f1f5f9;
+    }
+
+    .file-meta { color: #94a3b8; font-size: 11px; }
+
+    /* Footer */
+    footer {
+      background: #12141a;
+      border-top: 1px solid #232630;
+      padding: 8px 18px;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .privacy-badge { color: var(--green); font-weight: 600; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 960px) {
+      .workspace { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <!-- 1. TOP HEADER BAR -->
+  <header class="top-header">
+    <div class="brand-group">
+      <a href="index.html" class="brand" title="返回 MingCam 官方介紹頁">
+        <div class="brand-circle" id="brandCircle">●</div>
+        <div>
+          <div class="brand-title-row">
+            <span class="brand-title">MingCam</span>
+            <span class="badge-web">Web 免安裝版</span>
+          </div>
+          <div class="brand-sub">免 .exe · 瀏覽器本機錄影 ＋ 9 種標註 ＋ PiP 貼圖</div>
+        </div>
+      </a>
+
+      <div class="workspace-switcher" role="tablist">
+        <button class="ws-btn active-rec" id="tabRecBtn" data-help="🎬 錄影與錄音工作區：|使用瀏覽器原生 getDisplayMedia 與 MediaRecorder，免裝 .exe 即可錄製全螢幕、指定視窗或分頁與系統音訊。">🎬 錄影與錄音</button>
+        <button class="ws-btn" id="tabShotBtn" data-help="📸 截圖與標註工作區：|支援螢幕截圖、Ctrl+V 貼上剪貼簿圖片、9 種 PicPick 標註工具、吸管取色與 PiP 浮動貼圖。">📸 截圖與標註</button>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-cyan-outline" id="quickSnapBtn" data-help="✂️ 立即截圖標註：|擷取螢幕、視窗或分頁畫面並直接進入 9 種標註畫布。">✂️ 螢幕截圖</button>
+      <button class="btn-teal-outline" id="quickPipBtn" data-help="📌 PiP 浮動貼圖：|將目前截圖或標註畫面以子母畫面浮動於所有視窗最上層。">📌 PiP 貼圖</button>
+      <div class="timer-pill" id="recTimer">00:00:00</div>
+      <button class="btn-pause" id="pauseRecBtn" data-help="⏸ 暫停 / 繼續錄影：|暫停期間自動凍結時間軸，恢復錄影時無縫接續。">⏸</button>
+      <button class="btn-rec" id="recToggleBtn" data-help="🎬 開始 / 停止錄影：|選擇要錄製的螢幕、視窗或分頁，結束後立即產生可下載影片檔。">● REC</button>
+    </div>
+  </header>
+
+  <!-- 2. SUB-MODE STRIP -->
+  <div class="sub-strip">
+    <div class="mode-grid" id="recModeStrip">
+      <button class="mode-btn active-rec" data-rec-mode="screen">🖥️ 螢幕 / 視窗 / 分頁錄影</button>
+      <button class="mode-btn" data-rec-mode="audio">🎵 純音訊錄製 (系統/麥克風)</button>
+      <button class="mode-btn" id="openShotFromStrip">✂️ 切換至截圖標註</button>
+      <a href="index.html" class="mode-btn" style="text-align:center;text-decoration:none;">← 回下載頁 (macOS / Win)</a>
+    </div>
+
+    <div class="mode-grid hidden" id="shotModeStrip">
+      <button class="mode-btn active-shot" id="btnCaptureScreen">✂️ 擷取螢幕 / 視窗畫面</button>
+      <button class="mode-btn" id="btnPasteClip">📋 貼上剪貼簿圖片 (Ctrl+V)</button>
+      <button class="mode-btn" id="btnEyeDropper">🎨 桌面吸管取色器</button>
+      <button class="mode-btn" id="btnUploadImg">📂 開啟本機圖片標註</button>
+    </div>
+  </div>
+
+  <!-- 3. HOVER FEATURE BANNER -->
+  <div class="hover-banner" id="hoverBanner">
+    <strong>💡 本機隱私模式：</strong>
+    <span>100% 執行於你的 Chrome / Edge 瀏覽器記憶體內，完全不需安裝 .exe，影片與截圖絕不上傳至任何伺服器。</span>
+  </div>
+
+  <!-- 4. MAIN TWO-COLUMN WORKSPACE -->
+  <main class="workspace">
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- Recorder Controls -->
+      <div id="recLeftCards">
+        <div class="card">
+          <div class="card-title">錄影畫質與音訊設定</div>
+          <p class="card-desc" id="recModeDesc">點擊右上角「● REC」後，在瀏覽器彈窗中挑選「整個螢幕」、「特定視窗」或「分頁」即可開始錄影。</p>
+          <div class="radio-row">
+            <span style="color:#94a3b8;">影格率：</span>
+            <label><input type="radio" name="fps" value="30" checked /> 30 FPS</label>
+            <label><input type="radio" name="fps" value="60" /> 60 FPS</label>
+          </div>
+          <label class="check-row">
+            <input type="checkbox" id="chkSysAudio" checked />
+            內錄系統／分頁聲音（分享畫面時請勾選「同時分享音訊」）
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="chkMicAudio" />
+            同時混音收錄麥克風聲音
+          </label>
+        </div>
+
+        <div class="card">
+          <div class="card-title">公司電腦免 IT 放行說明</div>
+          <p class="card-desc" style="margin-bottom:0;">
+            本網頁版完全在瀏覽器沙盒中執行，不觸發 AppLocker / WDAC 或 UAC 管理員密碼。錄製完成後直接點擊右側檔案庫的「下載」儲存到本機資料夾。
+          </p>
+        </div>
+      </div>
+
+      <!-- Screenshot & Annotation Controls -->
+      <div id="shotLeftCards" class="hidden">
+        <div class="card">
+          <div class="card-title">截圖與匯入來源</div>
+          <p class="card-desc">可直接擷取電腦畫面，或按 <code>Win+Shift+S</code> 截圖後回到此頁按 <code>Ctrl+V</code> 直接貼上進行 9 種標註！</p>
+          <div class="btn-row">
+            <button class="btn-primary" id="btnCaptureScreen2">📸 擷取螢幕畫面</button>
+            <button class="btn-secondary" id="btnPasteClip2">📋 貼上剪貼簿</button>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" class="hidden" />
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📌 浮動貼圖 (Picture-in-Picture)</span>
+          </div>
+          <p class="card-desc">透過瀏覽器子母畫面將標註完的截圖置頂浮動於螢幕上，切換到 Word / Excel / 簡報也能對照查看。</p>
+          <button class="btn-teal" id="btnLaunchPip">📌 將目前畫布釘選為浮動貼圖</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>🎨 PicPick 最近取色紀錄（點擊複製）</span>
+            <button class="btn-secondary" id="btnEyeDropper2" style="padding:3px 8px;font-size:11px;">吸管取色</button>
+          </div>
+          <div class="color-pills" id="colorHistory"></div>
+          <p class="card-desc" id="colorEmptyHint" style="margin-bottom:0;">點擊「吸管取色」可在整個螢幕任意位置吸取 HEX 色碼。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- Recorder Live Preview Card -->
+      <div class="card" id="recPreviewCard">
+        <div class="card-title">
+          <span>🎬 即時錄影預覽</span>
+          <span id="recFormatBadge" style="font-size:11px;color:#38bdf8;font-family:var(--font-mono);">待機中</span>
+        </div>
+        <div class="stage-box">
+          <div class="stage-placeholder" id="recPlaceholder">
+            按下右上角紅色 <strong>● REC</strong> 開始錄製螢幕或系統音訊<br />
+            <span style="font-size:11.5px;">（支援 Chrome / Edge 最新版，錄影時可隨時暫停與繼續）</span>
+          </div>
+          <video id="liveVideo" autoplay muted playsinline class="hidden"></video>
+        </div>
+      </div>
+
+      <!-- Screenshot & 9-Tool PicPick Annotation Card -->
+      <div class="card hidden" id="shotEditorCard">
+        <div class="card-title">
+          <span>✏️ PicPick 9 種即時標註畫布</span>
+          <div class="btn-row">
+            <button class="btn-teal" id="btnCopyCanvas" style="padding:5px 10px;font-size:11.5px;">📋 複製圖片</button>
+            <button class="btn-primary" id="btnSaveCanvas" style="padding:5px 10px;font-size:11.5px;">💾 下載 PNG</button>
+          </div>
+        </div>
+
+        <!-- 9 Annotation Tools + Colors + Width + Undo -->
+        <div class="annot-toolbar" id="annotToolbar">
+          <button class="tool-btn" data-tool="rect" title="矩形">▭ 矩形</button>
+          <button class="tool-btn" data-tool="ellipse" title="橢圓">◯ 橢圓</button>
+          <button class="tool-btn active" data-tool="arrow" title="箭頭">↗ 箭頭</button>
+          <button class="tool-btn" data-tool="line" title="直線">╱ 直線</button>
+          <button class="tool-btn" data-tool="pen" title="畫筆">✎ 畫筆</button>
+          <button class="tool-btn" data-tool="highlighter" title="螢光筆">🖍 螢光筆</button>
+          <button class="tool-btn" data-tool="mosaic" title="馬賽克">▦ 馬賽克</button>
+          <button class="tool-btn" data-tool="counter" title="步驟序號章">① 序號</button>
+          <button class="tool-btn" data-tool="text" title="文字">A 文字</button>
+
+          <span class="tool-sep"></span>
+
+          <button class="swatch-btn active" data-color="#ef4444" style="background:#ef4444" title="紅"></button>
+          <button class="swatch-btn" data-color="#f97316" style="background:#f97316" title="橘"></button>
+          <button class="swatch-btn" data-color="#eab308" style="background:#eab308" title="黃"></button>
+          <button class="swatch-btn" data-color="#22c55e" style="background:#22c55e" title="綠"></button>
+          <button class="swatch-btn" data-color="#3b82f6" style="background:#3b82f6" title="藍"></button>
+          <button class="swatch-btn" data-color="#ffffff" style="background:#ffffff" title="白"></button>
+          <button class="swatch-btn" data-color="#111827" style="background:#111827" title="黑"></button>
+
+          <span class="tool-sep"></span>
+
+          <button class="tool-btn" data-width="2">細</button>
+          <button class="tool-btn active" data-width="4">中</button>
+          <button class="tool-btn" data-width="8">粗</button>
+
+          <span class="tool-sep"></span>
+
+          <button class="tool-btn" id="btnUndo" title="復原 (Ctrl+Z)">↩ 復原</button>
+          <button class="tool-btn" id="btnClearAnnot" title="清空標註">🗑 清空</button>
+        </div>
+
+        <div class="canvas-wrap" id="canvasWrap">
+          <div class="stage-placeholder" id="canvasPlaceholder">
+            尚未載入圖片 — 點擊上方 <strong>✂️ 擷取螢幕畫面</strong>，或直接按 <strong>Ctrl + V</strong> 貼上剪貼簿截圖
+          </div>
+          <canvas id="annotCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Output Files Library (Always Visible) -->
+      <div class="card">
+        <div class="card-title">
+          <span>📁 本次工作區輸出檔案庫</span>
+          <span id="fileCountLabel" style="font-size:11px;color:#94a3b8;">0 個檔案</span>
+        </div>
+        <div class="file-list" id="fileList">
+          <div style="padding:18px;text-align:center;color:#64748b;font-size:12px;">
+            尚無錄影或截圖檔案，完成錄影或儲存截圖後會立即顯示於此。
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Hidden video used for Picture-in-Picture floating pin -->
+  <video id="pipVideo" muted playsinline style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;"></video>
+
+  <footer>
+    <span id="statusText">[就緒] MingCam Web 已啟動（免安裝、免 .exe）。</span>
+    <span class="privacy-badge">🔒 100% 本機瀏覽器處理・無伺服器上傳</span>
+  </footer>
+
+  <script>
+    // ---------- State ----------
+    let activeWorkspace = 'recorder'; // 'recorder' | 'screenshot'
+    let recMode = 'screen';           // 'screen' | 'audio'
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let activeStreams = [];
+    let audioCtx = null;
+    let recTimerInterval = null;
+    let recElapsedMs = 0;
+    let recLastTick = 0;
+    let isPaused = false;
+
+    const outputFiles = []; // { id, name, type, sizeStr, timeStr, url, blob }
+    const colorHistory = [];
+
+    // Annotation State
+    const canvas = document.getElementById('annotCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    let baseImage = null;
+    let activeTool = 'arrow';
+    let activeColor = '#ef4444';
+    let activeWidth = 4;
+    let nextStepNum = 1;
+    let shapes = [];
+    let currentShape = null;
+    let isDrawing = false;
+
+    // ---------- Helpers ----------
+    function setStatus(msg) {
+      const t = new Date().toTimeString().slice(0, 8);
+      document.getElementById('statusText').textContent = `[${t}] ${msg}`;
+    }
+
+    function fmtTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const s = String(totalSec % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function fmtBytes(b) {
+      if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+      if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+      return b + ' B';
+    }
+
+    function timestampSlug() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+
+    // ---------- Hover Help Banner ----------
+    const hoverBanner = document.getElementById('hoverBanner');
+    const defaultBannerHtml = hoverBanner.innerHTML;
+    document.querySelectorAll('[data-help]').forEach((el) => {
+      el.addEventListener('mouseenter', () => {
+        const [title, detail] = el.dataset.help.split('|');
+        hoverBanner.innerHTML = `<strong style="color:#facc15">${title}</strong><span style="color:#fff">${detail}</span>`;
+      });
+      el.addEventListener('mouseleave', () => {
+        hoverBanner.innerHTML = defaultBannerHtml;
+      });
+    });
+
+    // ---------- Workspace Switching ----------
+    function switchWorkspace(ws) {
+      activeWorkspace = ws;
+      const isRec = ws === 'recorder';
+      document.getElementById('tabRecBtn').className = 'ws-btn' + (isRec ? ' active-rec' : '');
+      document.getElementById('tabShotBtn').className = 'ws-btn' + (!isRec ? ' active-shot' : '');
+      const circle = document.getElementById('brandCircle');
+      circle.className = 'brand-circle' + (isRec ? '' : ' shot-mode');
+      circle.textContent = isRec ? '●' : '⌖';
+
+      document.getElementById('recModeStrip').classList.toggle('hidden', !isRec);
+      document.getElementById('shotModeStrip').classList.toggle('hidden', isRec);
+      document.getElementById('recLeftCards').classList.toggle('hidden', !isRec);
+      document.getElementById('shotLeftCards').classList.toggle('hidden', isRec);
+      document.getElementById('recPreviewCard').classList.toggle('hidden', !isRec);
+      document.getElementById('shotEditorCard').classList.toggle('hidden', isRec);
+    }
+
+    document.getElementById('tabRecBtn').addEventListener('click', () => switchWorkspace('recorder'));
+    document.getElementById('tabShotBtn').addEventListener('click', () => switchWorkspace('screenshot'));
+    document.getElementById('openShotFromStrip').addEventListener('click', () => switchWorkspace('screenshot'));
+
+    document.querySelectorAll('[data-rec-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        recMode = btn.dataset.recMode;
+        document.querySelectorAll('[data-rec-mode]').forEach((b) => b.classList.toggle('active-rec', b === btn));
+        document.getElementById('recModeDesc').textContent = recMode === 'audio'
+          ? '純音訊模式：可錄製瀏覽器分頁／系統音訊與麥克風，輸出音訊檔。'
+          : '點擊右上角「● REC」後，在瀏覽器彈窗中挑選「整個螢幕」、「特定視窗」或「分頁」即可開始錄影。';
+      });
+    });
+
+    // ---------- Recording Engine (getDisplayMedia + AudioContext Mixer + MediaRecorder) ----------
+    function pickSupportedMime(audioOnly) {
+      const candidates = audioOnly
+        ? ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        : ['video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+      for (const mime of candidates) {
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported(mime)) return mime;
+      }
+      return '';
+    }
+
+    async function startRecording() {
+      try {
+        const fps = Number(document.querySelector('input[name="fps"]:checked').value);
+        const wantSysAudio = document.getElementById('chkSysAudio').checked;
+        const wantMic = document.getElementById('chkMicAudio').checked;
+        const audioOnly = recMode === 'audio';
+
+        activeStreams = [];
+        let displayStream = null;
+        let micStream = null;
+
+        if (!audioOnly || wantSysAudio) {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: { ideal: fps, max: fps } },
+            audio: wantSysAudio
+          });
+          activeStreams.push(displayStream);
+        }
+
+        if (wantMic || (audioOnly && !wantSysAudio)) {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          activeStreams.push(micStream);
+        }
+
+        const finalTracks = [];
+        if (!audioOnly && displayStream) {
+          displayStream.getVideoTracks().forEach((t) => finalTracks.push(t));
+        }
+
+        // Mix system audio + mic audio via Web Audio API
+        const audioTracks = [
+          ...(displayStream ? displayStream.getAudioTracks() : []),
+          ...(micStream ? micStream.getAudioTracks() : [])
+        ];
+
+        if (audioTracks.length > 0) {
+          audioCtx = new AudioContext();
+          const dest = audioCtx.createMediaStreamDestination();
+          if (displayStream && displayStream.getAudioTracks().length > 0) {
+            audioCtx.createMediaStreamSource(new MediaStream(displayStream.getAudioTracks())).connect(dest);
+          }
+          if (micStream && micStream.getAudioTracks().length > 0) {
+            audioCtx.createMediaStreamSource(new MediaStream(micStream.getAudioTracks())).connect(dest);
+          }
+          dest.stream.getAudioTracks().forEach((t) => finalTracks.push(t));
+        }
+
+        if (finalTracks.length === 0) {
+          setStatus('⚠️ 沒有可用的影像或音訊軌道，請確認分享設定。');
+          cleanupStreams();
+          return;
+        }
+
+        const combinedStream = new MediaStream(finalTracks);
+        const mimeType = pickSupportedMime(audioOnly);
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const ext = mimeType.includes('mp4') ? (audioOnly ? 'm4a' : 'mp4') : 'webm';
+          const blob = new Blob(recordedChunks, { type: mimeType || (audioOnly ? 'audio/webm' : 'video/webm') });
+          const prefix = audioOnly ? 'MingCam_Audio_' : 'MingCam_Web_';
+          const name = `${prefix}${timestampSlug()}.${ext}`;
+          addOutputFile(name, ext.toUpperCase(), blob);
+          setStatus(`✅ 錄製完成：${name} (${fmtBytes(blob.size)})`);
+          cleanupStreams();
+          resetRecUi();
+        };
+
+        // Stop recording gracefully if user clicks browser's "Stop sharing" bar
+        if (displayStream && displayStream.getVideoTracks()[0]) {
+          displayStream.getVideoTracks()[0].onended = () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+          };
+        }
+
+        // Live preview
+        if (!audioOnly && displayStream) {
+          const liveVideo = document.getElementById('liveVideo');
+          liveVideo.srcObject = displayStream;
+          liveVideo.classList.remove('hidden');
+          document.getElementById('recPlaceholder').classList.add('hidden');
+        }
+
+        mediaRecorder.start(250);
+        isPaused = false;
+        recElapsedMs = 0;
+        recLastTick = Date.now();
+        recTimerInterval = setInterval(() => {
+          if (!isPaused) {
+            const now = Date.now();
+            recElapsedMs += now - recLastTick;
+            recLastTick = now;
+            document.getElementById('recTimer').textContent = fmtTime(recElapsedMs);
+          }
+        }, 200);
+
+        document.getElementById('recTimer').className = 'timer-pill recording';
+        document.getElementById('pauseRecBtn').style.display = 'inline-block';
+        document.getElementById('pauseRecBtn').textContent = '⏸';
+        const recBtn = document.getElementById('recToggleBtn');
+        recBtn.textContent = '■ STOP';
+        recBtn.classList.add('stopping');
+        document.getElementById('recFormatBadge').textContent = `錄製中 · ${mimeType.includes('mp4') ? 'MP4' : 'WEBM'} · ${fps} FPS`;
+        setStatus('🎬 正在錄製中...');
+      } catch (err) {
+        cleanupStreams();
+        setStatus(`已取消或啟動錄影失敗：${err.message}`);
+      }
+    }
+
+    function cleanupStreams() {
+      activeStreams.forEach((s) => s.getTracks().forEach((t) => t.stop()));
+      activeStreams = [];
+      if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+      const liveVideo = document.getElementById('liveVideo');
+      liveVideo.srcObject = null;
+      liveVideo.classList.add('hidden');
+      document.getElementById('recPlaceholder').classList.remove('hidden');
+    }
+
+    function resetRecUi() {
+      clearInterval(recTimerInterval);
+      document.getElementById('recTimer').textContent = '00:00:00';
+      document.getElementById('recTimer').className = 'timer-pill';
+      document.getElementById('pauseRecBtn').style.display = 'none';
+      const recBtn = document.getElementById('recToggleBtn');
+      recBtn.textContent = '● REC';
+      recBtn.classList.remove('stopping');
+      document.getElementById('recFormatBadge').textContent = '待機中';
+    }
+
+    document.getElementById('recToggleBtn').addEventListener('click', () => {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        startRecording();
+      } else {
+        mediaRecorder.stop();
+      }
+    });
+
+    document.getElementById('pauseRecBtn').addEventListener('click', () => {
+      if (!mediaRecorder) return;
+      if (mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        isPaused = true;
+        document.getElementById('pauseRecBtn').textContent = '▶';
+        document.getElementById('recTimer').className = 'timer-pill paused';
+        setStatus('⏸ 已暫停錄影');
+      } else if (mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        isPaused = false;
+        recLastTick = Date.now();
+        document.getElementById('pauseRecBtn').textContent = '⏸';
+        document.getElementById('recTimer').className = 'timer-pill recording';
+        setStatus('▶ 繼續錄影中...');
+      }
+    });
+
+    // ---------- Screenshot Capture & Paste ----------
+    async function captureSingleScreenFrame() {
+      switchWorkspace('screenshot');
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        await new Promise((r) => requestAnimationFrame(r));
+
+        const off = document.createElement('canvas');
+        off.width = video.videoWidth;
+        off.height = video.videoHeight;
+        off.getContext('2d').drawImage(video, 0, 0);
+        stream.getTracks().forEach((t) => t.stop());
+
+        const img = new Image();
+        img.onload = () => loadBaseImage(img, `已擷取畫面 (${img.width}×${img.height})`);
+        img.src = off.toDataURL('image/png');
+      } catch (err) {
+        setStatus(`截圖已取消或失敗：${err.message}`);
+      }
+    }
+
+    function loadBaseImage(img, msg) {
+      baseImage = img;
+      shapes = [];
+      nextStepNum = 1;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.display = 'block';
+      document.getElementById('canvasPlaceholder').classList.add('hidden');
+      redrawCanvas();
+      setStatus(`✅ ${msg}，可直接使用上方 9 種標註工具！`);
+    }
+
+    async function pasteFromClipboard() {
+      switchWorkspace('screenshot');
+      try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          const imgType = item.types.find((t) => t.startsWith('image/'));
+          if (imgType) {
+            const blob = await item.getType(imgType);
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => { loadBaseImage(img, '已貼上剪貼簿圖片'); URL.revokeObjectURL(url); };
+            img.src = url;
+            return;
+          }
+        }
+        setStatus('剪貼簿中沒有圖片（也可直接在此頁面按 Ctrl+V 貼上）。');
+      } catch {
+        setStatus('請直接在此頁面按 Ctrl+V 貼上剪貼簿圖片。');
+      }
+    }
+
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          switchWorkspace('screenshot');
+          const blob = item.getAsFile();
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => { loadBaseImage(img, '已貼上剪貼簿圖片'); URL.revokeObjectURL(url); };
+          img.src = url;
+          return;
+        }
+      }
+    });
+
+    document.getElementById('quickSnapBtn').addEventListener('click', captureSingleScreenFrame);
+    document.getElementById('btnCaptureScreen').addEventListener('click', captureSingleScreenFrame);
+    document.getElementById('btnCaptureScreen2').addEventListener('click', captureSingleScreenFrame);
+    document.getElementById('btnPasteClip').addEventListener('click', pasteFromClipboard);
+    document.getElementById('btnPasteClip2').addEventListener('click', pasteFromClipboard);
+
+    document.getElementById('btnUploadImg').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { loadBaseImage(img, `已載入 ${file.name}`); URL.revokeObjectURL(url); };
+      img.src = url;
+    });
+
+    // ---------- 9-Tool PicPick Annotation Canvas ----------
+    document.querySelectorAll('[data-tool]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeTool = btn.dataset.tool;
+        document.querySelectorAll('[data-tool]').forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    document.querySelectorAll('[data-color]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeColor = btn.dataset.color;
+        document.querySelectorAll('[data-color]').forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    document.querySelectorAll('[data-width]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeWidth = Number(btn.dataset.width);
+        document.querySelectorAll('[data-width]').forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!baseImage) return;
+      const pt = getCanvasPoint(e);
+
+      if (activeTool === 'counter') {
+        shapes.push({ tool: 'counter', color: activeColor, width: activeWidth, num: nextStepNum++, pts: [pt] });
+        redrawCanvas();
+        return;
+      }
+
+      if (activeTool === 'text') {
+        const text = prompt('請輸入標註文字：');
+        if (text && text.trim()) {
+          shapes.push({ tool: 'text', color: activeColor, width: activeWidth, text: text.trim(), pts: [pt] });
+          redrawCanvas();
+        }
+        return;
+      }
+
+      isDrawing = true;
+      canvas.setPointerCapture(e.pointerId);
+      currentShape = { tool: activeTool, color: activeColor, width: activeWidth, pts: [pt, pt] };
+      shapes.push(currentShape);
+      redrawCanvas();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing || !currentShape) return;
+      const pt = getCanvasPoint(e);
+      if (currentShape.tool === 'pen' || currentShape.tool === 'highlighter' || currentShape.tool === 'mosaic') {
+        currentShape.pts.push(pt);
+      } else {
+        currentShape.pts[1] = pt;
+      }
+      redrawCanvas();
+    });
+
+    canvas.addEventListener('pointerup', () => {
+      isDrawing = false;
+      currentShape = null;
+    });
+
+    function redrawCanvas() {
+      if (!baseImage) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(baseImage, 0, 0);
+
+      const scale = Math.max(1, canvas.width / 1000);
+
+      for (const s of shapes) {
+        const sw = s.width * scale;
+        ctx.save();
+        ctx.strokeStyle = s.color;
+        ctx.fillStyle = s.color;
+        ctx.lineWidth = sw;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (s.tool === 'rect') {
+          const [p1, p2] = s.pts;
+          ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+        } else if (s.tool === 'ellipse') {
+          const [p1, p2] = s.pts;
+          ctx.beginPath();
+          ctx.ellipse((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, Math.abs(p2.x - p1.x) / 2, Math.abs(p2.y - p1.y) / 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (s.tool === 'line') {
+          const [p1, p2] = s.pts;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        } else if (s.tool === 'arrow') {
+          const [p1, p2] = s.pts;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+          const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+          const head = Math.max(14 * scale, sw * 4);
+          ctx.beginPath();
+          ctx.moveTo(p2.x, p2.y);
+          ctx.lineTo(p2.x - head * Math.cos(ang - 0.45), p2.y - head * Math.sin(ang - 0.45));
+          ctx.lineTo(p2.x - head * Math.cos(ang + 0.45), p2.y - head * Math.sin(ang + 0.45));
+          ctx.closePath();
+          ctx.fill();
+        } else if (s.tool === 'pen' || s.tool === 'highlighter') {
+          if (s.tool === 'highlighter') {
+            ctx.globalAlpha = 0.42;
+            ctx.lineWidth = sw * 4.2;
+          }
+          ctx.beginPath();
+          s.pts.forEach((p, idx) => idx === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+          ctx.stroke();
+        } else if (s.tool === 'mosaic') {
+          const block = Math.max(12, Math.round(sw * 3.5));
+          const visited = new Set();
+          for (const p of s.pts) {
+            const gx = Math.floor(p.x / block);
+            const gy = Math.floor(p.y / block);
+            const key = `${gx},${gy}`;
+            if (visited.has(key)) continue;
+            visited.add(key);
+            const sx = Math.min(canvas.width - 1, Math.max(0, gx * block + Math.floor(block / 2)));
+            const sy = Math.min(canvas.height - 1, Math.max(0, gy * block + Math.floor(block / 2)));
+            const px = ctx.getImageData(sx, sy, 1, 1).data;
+            ctx.fillStyle = `rgb(${px[0]},${px[1]},${px[2]})`;
+            ctx.fillRect(gx * block, gy * block, block, block);
+          }
+        } else if (s.tool === 'counter') {
+          const p = s.pts[0];
+          const r = 16 * scale;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2 * scale;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.font = `bold ${Math.round(16 * scale)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(s.num), p.x, p.y + 1);
+        } else if (s.tool === 'text') {
+          const p = s.pts[0];
+          ctx.font = `bold ${Math.round((16 + s.width * 2) * scale)}px "Noto Sans TC", sans-serif`;
+          ctx.fillText(s.text, p.x, p.y);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    function undoAnnot() {
+      if (shapes.length > 0) {
+        shapes.pop();
+        redrawCanvas();
+      }
+    }
+
+    document.getElementById('btnUndo').addEventListener('click', undoAnnot);
+    document.getElementById('btnClearAnnot').addEventListener('click', () => {
+      shapes = [];
+      nextStepNum = 1;
+      redrawCanvas();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && activeWorkspace === 'screenshot') {
+        e.preventDefault();
+        undoAnnot();
+      }
+    });
+
+    // Copy & Save Annotated PNG
+    document.getElementById('btnCopyCanvas').addEventListener('click', () => {
+      if (!baseImage) return setStatus('請先擷取或貼上圖片。');
+      canvas.toBlob(async (blob) => {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          setStatus('📋 已將標註圖片複製到剪貼簿！');
+        } catch (err) {
+          setStatus(`⚠️ 複製失敗（請改用下載 PNG）：${err.message}`);
+        }
+      }, 'image/png');
+    });
+
+    document.getElementById('btnSaveCanvas').addEventListener('click', () => {
+      if (!baseImage) return setStatus('請先擷取或貼上圖片。');
+      canvas.toBlob((blob) => {
+        const name = `MingCam_Shot_${timestampSlug()}.png`;
+        addOutputFile(name, 'PNG', blob);
+        triggerDownload(URL.createObjectURL(blob), name);
+        setStatus(`💾 已下載截圖：${name}`);
+      }, 'image/png');
+    });
+
+    // ---------- Picture-in-Picture Floating Pin ----------
+    async function launchPipPin() {
+      if (!baseImage) {
+        switchWorkspace('screenshot');
+        return setStatus('請先擷取或貼上圖片，再釘選為浮動貼圖。');
+      }
+      try {
+        const pipVideo = document.getElementById('pipVideo');
+        const stream = canvas.captureStream(1);
+        pipVideo.srcObject = stream;
+        await pipVideo.play();
+        await pipVideo.requestPictureInPicture();
+        setStatus('📌 已開啟浮動貼圖視窗（可拖曳至任意視窗最上層參考）！');
+      } catch (err) {
+        setStatus(`⚠️ 無法啟動 PiP 浮動貼圖：${err.message}`);
+      }
+    }
+
+    document.getElementById('btnLaunchPip').addEventListener('click', launchPipPin);
+    document.getElementById('quickPipBtn').addEventListener('click', launchPipPin);
+
+    // ---------- EyeDropper Color Picker ----------
+    async function runEyeDropper() {
+      switchWorkspace('screenshot');
+      if (!('EyeDropper' in window)) {
+        return setStatus('⚠️ 此瀏覽器不支援 EyeDropper API，請使用最新版 Chrome 或 Edge。');
+      }
+      try {
+        const picker = new EyeDropper();
+        const { sRGBHex } = await picker.open();
+        const hex = sRGBHex.toUpperCase();
+        await navigator.clipboard.writeText(hex).catch(() => {});
+        addColorToHistory(hex);
+        setStatus(`🎨 已吸取並複製色碼 ${hex}`);
+      } catch {
+        setStatus('已取消取色。');
+      }
+    }
+
+    function addColorToHistory(hex) {
+      const idx = colorHistory.indexOf(hex);
+      if (idx >= 0) colorHistory.splice(idx, 1);
+      colorHistory.unshift(hex);
+      if (colorHistory.length > 12) colorHistory.pop();
+
+      const container = document.getElementById('colorHistory');
+      document.getElementById('colorEmptyHint').classList.add('hidden');
+      container.innerHTML = '';
+      colorHistory.forEach((h) => {
+        const btn = document.createElement('button');
+        btn.className = 'color-pill';
+        btn.innerHTML = `<span class="swatch-dot" style="background:${h}"></span>${h}`;
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(h).catch(() => {});
+          setStatus(`📋 已複製色碼 ${h}`);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    document.getElementById('btnEyeDropper').addEventListener('click', runEyeDropper);
+    document.getElementById('btnEyeDropper2').addEventListener('click', runEyeDropper);
+
+    // ---------- Output File Library ----------
+    function triggerDownload(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    }
+
+    function addOutputFile(name, type, blob) {
+      const url = URL.createObjectURL(blob);
+      outputFiles.unshift({
+        id: Date.now() + Math.random(),
+        name,
+        type,
+        sizeStr: fmtBytes(blob.size),
+        timeStr: new Date().toLocaleTimeString('zh-TW', { hour12: false }),
+        url,
+        blob
+      });
+      renderFileList();
+    }
+
+    function renderFileList() {
+      const list = document.getElementById('fileList');
+      document.getElementById('fileCountLabel').textContent = `${outputFiles.length} 個檔案`;
+      if (outputFiles.length === 0) {
+        list.innerHTML = '<div style="padding:18px;text-align:center;color:#64748b;font-size:12px;">尚無錄影或截圖檔案，完成錄影或儲存截圖後會立即顯示於此。</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      outputFiles.forEach((f, idx) => {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = `
+          <span class="file-badge">${f.type}</span>
+          <span class="file-name" title="${f.name}">${f.name}</span>
+          <span class="file-meta">${f.sizeStr}</span>
+          <span class="file-meta">${f.timeStr}</span>
+          <span style="display:flex;gap:5px;">
+            <button class="btn-secondary" style="padding:4px 8px;font-size:11px;" data-dl="${idx}">下載</button>
+            <button class="btn-danger" data-del="${idx}">刪除</button>
+          </span>
+        `;
+        row.querySelector('[data-dl]').addEventListener('click', () => triggerDownload(f.url, f.name));
+        row.querySelector('[data-del]').addEventListener('click', () => {
+          URL.revokeObjectURL(f.url);
+          outputFiles.splice(idx, 1);
+          renderFileList();
+        });
+        list.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>
